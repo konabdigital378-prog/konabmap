@@ -2,11 +2,16 @@ import { useState } from 'react';
 import { LIGNES } from '../data.js';
 import { getFavs } from '../lib.js';
 
-export default function Lignes({ ville, onVoir }) {
+export default function Lignes({ ville, onVoir, isPremium, goPremium }) {
   const [q, setQ] = useState('');
   const [favs, setFavs] = useState(getFavs());
 
   const toggleFav = (code) => {
+    if (!favs.includes(code) && favs.length >= 3 && !isPremium) {
+      alert('💎 3 favoris max en gratuit — passe Premium pour illimité (100 FCFA/30j)');
+      goPremium();
+      return;
+    }
     const f = favs.includes(code) ? favs.filter((x) => x !== code) : [...favs, code];
     setFavs(f);
     localStorage.setItem('favs', JSON.stringify(f));

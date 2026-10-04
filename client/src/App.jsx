@@ -6,6 +6,7 @@ import Lignes from './pages/Lignes.jsx';
 import Trajet from './pages/Trajet.jsx';
 import Compte from './pages/Compte.jsx';
 import Admin from './pages/Admin.jsx';
+import Premium from './pages/Premium.jsx';
 import { socket } from './socket.js';
 import { supa, getSession, isAdmin, notify } from './supabase.js';
 
@@ -13,6 +14,7 @@ export default function App() {
   const [splash, setSplash] = useState(true);
   const [page, setPage] = useState('accueil');
   const [session, setSession] = useState(null);
+  const [isPremium, setIsPremium] = useState(false);
   const [admin, setAdmin] = useState(false);
   const [profil, setProfil] = useState(() => ({
     pseudo: localStorage.getItem('pseudo') || '',
@@ -40,8 +42,17 @@ export default function App() {
   const refreshSession = useCallback(async (pseudo, ville, retour = true) => {
     const s = await getSession();
     setSession(s);
-    if (s) setAdmin(await isAdmin());
-    else setAdmin(false);
+    if (s) {
+      setAdmin(await isAdmin());
+      try {
+        const { data } = await supa.from('profils').select('premium_until').eq('user_id', s.user.id).limit(1);
+        const fin = data?.[0]?.premium_until ? new Date(data[0].premium_until) : null;
+        setIsPremium(!!(fin && fin > new Date()));
+      } catch { setIsPremium(false); }
+    } else {
+      setAdmin(false);
+      setIsPremium(false);
+    }
     if (pseudo && ville) {
       setProfil({ pseudo, ville });
       montrerBienvenue(pseudo, ville, retour);
@@ -111,6 +122,11 @@ export default function App() {
     window.scrollTo({ top: 0 });
   };
 
+  const goPremium = () => {
+    setPage('premium');
+    window.scrollTo({ top: 0 });
+  };
+
   const busVille = busAll.filter((b) => !b.ville || b.ville === profil.ville);
 
   const installer = async () => {
@@ -139,9 +155,11 @@ export default function App() {
       )}
 
       <main>
-        {page === 'accueil' && <Accueil ville={profil.ville} userPos={userPos} bus={busVille} go={(p) => { setPage(p); window.scrollTo({ top: 0 }); }} focusLigne={focusLigne} clearFocus={() => setFocusLigne('')} />}
-        {page === 'lignes' && <Lignes ville={profil.ville} onVoir={voirLigne} />}
+        {page === 'accueil' && <Accueil ville={profil.ville} userPos={userPos} bus={busVille} isPremium={isPremium} goPremium={goPremium} go={(p) => { setPage(p); window.scrollTo({ top: 0 }); }} focusLigne={focusLigne} clearFocus={() => setFocusLigne('')} />}
+        {page === 'lignes' && <Lignes ville={profil.ville} onVoir={voirLigne} isPremium={isPremium} goPremium={goPremium} />}
         {page === 'trajet' && <Trajet ville={profil.ville} onVoir={voirLigne} />}
+        {page === 'compte' && <Compte session={session} onSession={refreshSession} isPremium={isPremium} goPremium={goPremium} />}
+        {page === 'premium' && <Premium />}
         {page === 'compte' && <Compte session={session} onSession={refreshSession} />}
         {page === 'admin' && (admin ? <Admin ville={profil.ville} /> : (
           <div className="page"><section className="card"><p className="hint">🔒 Réservé aux administrateurs.</p></section></div>

@@ -17,7 +17,7 @@ function erreurAmicale(e, setMsg, setCooldown) {
   else setMsg('Erreur : ' + m, true);
 }
 
-export default function Compte({ session, onSession }) {
+export default function Compte({ session, onSession, isPremium, goPremium }) {
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
   const [msg, setMsg] = useState(['', false]);
@@ -134,16 +134,17 @@ export default function Compte({ session, onSession }) {
         </section>
       )}
 
-      {session && <Historique />}
+      {session && <Historique isPremium={isPremium} goPremium={goPremium} />}
     </div>
   );
 }
 
-function Historique() {
+function Historique({ isPremium, goPremium }) {
   const [trajets, setTrajets] = useState(() => {
     try { return JSON.parse(localStorage.getItem('trajets') || '[]'); } catch { return []; }
   });
   if (trajets.length === 0) return null;
+  const visibles = isPremium ? trajets : trajets.slice(0, 5);
   const vider = () => { localStorage.setItem('trajets', '[]'); setTrajets([]); };
   const minutes = trajets.reduce((s, t) => s + (t.dureeMin || 0), 0);
   const top = Object.entries(trajets.reduce((m, t) => { m[t.ligne] = (m[t.ligne] || 0) + 1; return m; }, {}))
@@ -157,13 +158,16 @@ function Historique() {
         <div className="hero-stat" style={{ background: '#eafff1', color: '#062a5e' }}>⭐ {top ? top[0] : '—'}<small>ligne préférée</small></div>
       </div>
       <h2 style={{ marginTop: 12 }}>🧾 Mes derniers trajets partagés</h2>
-      {trajets.map((t, i) => (
+      {visibles.map((t, i) => (
         <div key={i} className="hist-item">
           <span>🚌 <b>{t.ligne}</b> • {t.ville}</span>
           <small>{new Date(t.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} • {t.dureeMin} min</small>
         </div>
       ))}
       <button className="btn secondary" onClick={vider}>Effacer l'historique</button>
+      {!isPremium && trajets.length > 5 && (
+        <button className="btn primary" onClick={goPremium}>💎 Premium : voir tout l'historique</button>
+      )}
     </section>
   );
 }

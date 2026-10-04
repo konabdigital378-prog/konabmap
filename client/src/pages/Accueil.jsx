@@ -6,7 +6,7 @@ import { socket } from '../socket.js';
 import { distanceM, formatDist, formatEta, getFavs, AFFL } from '../lib.js';
 import { shareBusPosition, notify } from '../supabase.js';
 
-export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocus }) {
+export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocus, isPremium, goPremium }) {
   const mapRef = useRef(null);
   const mapObj = useRef(null);
   const lignesLayer = useRef(null);
@@ -160,6 +160,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
   const alerter = (b, distTxt) => {
     if (!alertSonore || dejaAlerte.current[b.id]) return;
     if (alertesFavs && !getFavs().includes(b.ligne)) return;
+    if (!isPremium) return; // alertes = Premium
     dejaAlerte.current[b.id] = true;
     notify(`Bus ${b.ligne} proche !`, `À ${distTxt} de toi, prépare-toi !`).catch(() => {});
     setTimeout(() => delete dejaAlerte.current[b.id], 15000);
@@ -262,7 +263,10 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
             );
           })}
         </div>
-        <label><input type="checkbox" checked={alertSonore} onChange={(e) => setAlertSonore(e.target.checked)} /> M'alerter quand un bus est à moins de 800m</label>
+        <label><input type="checkbox" checked={alertSonore} onChange={(e) => {
+          if (e.target.checked && !isPremium) { alert('💎 Les alertes de proximité sont Premium (100 FCFA/30j)'); goPremium(); return; }
+          setAlertSonore(e.target.checked);
+        }} /> M'alerter quand un bus est à moins de 800m 💎</label>
         <label><input type="checkbox" checked={alertesFavs} onChange={(e) => setAlertesFavs(e.target.checked)} /> Alertes seulement pour mes lignes ⭐</label>
       </section>
     </div>

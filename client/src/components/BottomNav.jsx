@@ -2,6 +2,7 @@ const TABS = [
   { id: 'accueil', emoji: '🏠', label: 'Accueil' },
   { id: 'lignes', emoji: '🗺️', label: 'Lignes' },
   { id: 'trajet', emoji: '🧭', label: 'Trajet' },
+  { id: 'premium', emoji: '💎', label: 'Premium' },
   { id: 'compte', emoji: '👤', label: 'Compte' },
   { id: 'admin', emoji: '🛡️', label: 'Admin', admin: true },
 ];

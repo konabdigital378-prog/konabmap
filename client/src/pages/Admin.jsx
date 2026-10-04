@@ -6,14 +6,43 @@ export default function Admin({ ville }) {
   const [users, setUsers] = useState([]);
   const [titre, setTitre] = useState('');
   const [message, setMessage] = useState('');
+  const [commandes, setCommandes] = useState([]);
+  const [codes, setCodes] = useState([]);
+
+  const token = async () => (await supa.auth.getSession()).data.session?.access_token;
+  const api = async (path, opts = {}) => {
+    const t = await token();
+    const r = await fetch(path, { ...opts, headers: { ...(opts.headers || {}), Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' } });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.message || 'Erreur serveur');
+    return d;
+  };
 
   const charger = async () => {
     try {
       setStats(await adminStats());
       setUsers(await listUsers());
+      const d = await api('/api/admin/orders').catch(() => ({ orders: [] }));
+      setCommandes(d.orders || []);
     } catch (e) {
       setStats({ erreur: e.message || String(e) });
     }
+  };
+
+  const validerCommande = async (id, ok) => {
+    if (ok && !confirm('Valider ce paiement et activer le pass ?')) return;
+    if (!ok && !confirm('Rejeter ce paiement ?')) return;
+    try {
+      await api('/api/admin/validate', { method: 'POST', body: JSON.stringify({ orderId: id, ok }) });
+      charger();
+    } catch (e) { alert('Erreur : ' + (e.message || e)); }
+  };
+
+  const genererCodes = async () => {
+    try {
+      const d = await api('/api/admin/codes', { method: 'POST', body: JSON.stringify({ jours: 30, qty: 5 }) });
+      setCodes(d.codes || []);
+    } catch (e) { alert('Erreur : ' + (e.message || e)); }
   };
 
   useEffect(() => { charger(); }, []);
@@ -79,6 +108,23 @@ export default function Admin({ ville }) {
         </div>
         <h3>🧹 Nettoyage positions</h3>
         <button className="btn secondary" onClick={purger}>Supprimer positions de +10 min</button>
+        <h3>💰 Commandes Premium ({commandes.length})</h3>
+        <div>
+          {commandes.map((o) => (
+            <div key={o.id} className="bus-item">
+              <b>{o.ref}</b> <small>{o.amount_fcfa} F • {o.pseudo || o.user_id?.slice(0, 8)}</small><br />
+              <small>{o.status} • score OCR {o.ocr_confidence || 0}%</small>
+              <div className="row" style={{ marginTop: 6 }}>
+                <button className="btn primary" style={{ marginTop: 0 }} onClick={() => validerCommande(o.id, true)}>Valider</button>
+                <button className="btn secondary" style={{ marginTop: 0 }} onClick={() => validerCommande(o.id, false)}>Rejeter</button>
+              </div>
+            </div>
+          ))}
+          {commandes.length === 0 && <p className="hint">Aucune commande en attente.</p>}
+        </div>
+        <h3>🎟️ Codes promo (30j)</h3>
+        <button className="btn secondary" onClick={genererCodes}>Générer 5 codes</button>
+        {codes.map((c) => <p key={c.code} style={{ fontFamily: 'monospace', fontWeight: 800 }}>{c.code}</p>)}
       </section>
     </div>
   );
