@@ -36,8 +36,29 @@
   <div id="map"></div>
 
   <aside id="panel">
+    <!-- COMPTE -->
+    <section class="card" id="auth-card">
+      <h2>🔐 Mon compte</h2>
+      <div id="auth-form">
+        <label>Email</label>
+        <input id="auth-email" type="email" placeholder="toi@exemple.com" autocomplete="email" />
+        <label>Mot de passe</label>
+        <input id="auth-pass" type="password" placeholder="••••••••" autocomplete="current-password" />
+        <div class="row">
+          <button id="btn-login" class="btn primary">Se connecter</button>
+          <button id="btn-signup" class="btn secondary">Créer un compte</button>
+        </div>
+        <p class="hint"><a href="#" id="link-reset">Mot de passe oublié ?</a></p>
+        <p id="auth-msg" class="hint"></p>
+      </div>
+      <div id="auth-ok" class="hidden">
+        <p>✅ Connecté : <b id="auth-qui"></b></p>
+        <button id="btn-logout" class="btn secondary">Se déconnecter</button>
+      </div>
+    </section>
+
     <!-- CONNEXION -->
-    <section class="card">
+    <section class="card hidden" id="profil-card">
       <h2>👋 Connexion étudiant</h2>
       <label>Ton prénom / pseudo</label>
       <input id="pseudo" placeholder="Ex: Awa" />
@@ -95,6 +116,21 @@
       <input id="recherche-ligne" placeholder="🔍 Rechercher une ligne ou un arrêt..." style="margin-bottom:8px" />
       <div id="lignes-info"></div>
       <p class="hint">Itinéraires : sotraco.bf • Horaires et tarifs : agences SOTRACO. Points majeurs vérifiés OpenStreetMap, arrêts intermédiaires indicatifs.</p>
+    </section>
+
+    <!-- ADMIN -->
+    <section class="card hidden" id="admin-panel" style="border:3px solid #660099">
+      <h2>🛡️ Panel Admin</h2>
+      <div id="admin-stats"><p class="hint">Chargement...</p></div>
+      <button id="btn-admin-refresh" class="btn secondary">🔄 Actualiser</button>
+      <h3>📢 Message à tous</h3>
+      <input id="admin-titre" placeholder="Titre (ex: Grève ligne L1)" />
+      <input id="admin-msg" placeholder="Message..." />
+      <button id="btn-broadcast" class="btn primary">Envoyer</button>
+      <h3>👥 Étudiants <span id="admin-count"></span></h3>
+      <div id="admin-users"></div>
+      <h3>🧹 Nettoyage positions</h3>
+      <button id="btn-purge" class="btn secondary">Supprimer positions de +10 min</button>
     </section>
   </aside>
 </main>

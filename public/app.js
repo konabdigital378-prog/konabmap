@@ -309,6 +309,11 @@ villeSel.onchange = () => {
   remplirSelectsVille(villeSel.value);
 };
 document.getElementById("save-profil").onclick = async () => {
+  if (window.KonabSupa && !(await KonabSupa.getSession())) {
+    alert("Crée ton compte / connecte-toi d'abord 🔐 (carte Mon compte en haut)");
+    document.getElementById("auth-card").scrollIntoView({ behavior: "smooth" });
+    return;
+  }
   const pseudo = pseudoInput.value.trim() || "Étudiant";
   const ville = villeSel.value, univ = document.getElementById("universite").value;
   localStorage.setItem("pseudo", pseudo);
@@ -317,12 +322,100 @@ document.getElementById("save-profil").onclick = async () => {
   localStorage.setItem("mon-arret", document.getElementById("mon-arret").value);
   afficherVille(ville);
   remplirSelectsVille(ville);
-  // Stockage Supabase (si configuré) + notification push d'accueil
+  // Stockage Supabase + notification d'accueil
   if (window.KonabSupa) {
-    KonabSupa.saveProfil({ pseudo, ville, universite: univ }).catch(() => {});
+    try { await KonabSupa.saveProfil({ pseudo, ville, universite: univ }); }
+    catch (e) { console.warn("profil non sauvé:", e?.message); }
     KonabSupa.notify(`Bienvenue ${pseudo} !`, `Environnement ${ville} activé 🚌`).catch(() => {});
   }
   montrerBienvenue(pseudo, ville, false);
+};
+
+// ===== AUTHENTIFICATION =====
+async function refreshAuthUI() {
+  if (!window.KonabSupa) return;
+  const session = await KonabSupa.getSession();
+  const logged = !!session;
+  document.getElementById("auth-form").classList.toggle("hidden", logged);
+  document.getElementById("auth-ok").classList.toggle("hidden", !logged);
+  document.getElementById("profil-card").classList.toggle("hidden", !logged);
+  if (logged) {
+    document.getElementById("auth-qui").textContent = session.user.email;
+    if (await KonabSupa.isAdmin()) chargerAdmin();
+    else document.getElementById("admin-panel").classList.add("hidden");
+  } else {
+    document.getElementById("admin-panel").classList.add("hidden");
+  }
+}
+function authMsg(t, err) {
+  const el = document.getElementById("auth-msg");
+  el.textContent = t; el.style.color = err ? "red" : "green";
+}
+document.getElementById("btn-signup").onclick = async () => {
+  const em = document.getElementById("auth-email").value.trim(), pw = document.getElementById("auth-pass").value;
+  if (!em || pw.length < 6) return authMsg("Email + mot de passe (6 caractères min)", true);
+  try { await KonabSupa.signUp(em, pw); authMsg("Compte créé ✅ Vérifie tes emails si demandé, puis connecte-toi."); }
+  catch (e) { authMsg("Erreur : " + (e.message || e), true); }
+};
+document.getElementById("btn-login").onclick = async () => {
+  const em = document.getElementById("auth-email").value.trim(), pw = document.getElementById("auth-pass").value;
+  try { await KonabSupa.signIn(em, pw); authMsg("Connecté ✅"); refreshAuthUI(); }
+  catch (e) { authMsg("Erreur : " + (e.message || e), true); }
+};
+document.getElementById("btn-logout").onclick = async () => {
+  await KonabSupa.signOut(); authMsg(""); refreshAuthUI();
+};
+document.getElementById("link-reset").onclick = async (e) => {
+  e.preventDefault();
+  const em = document.getElementById("auth-email").value.trim();
+  if (!em) return authMsg("Entre ton email d'abord", true);
+  try { await KonabSupa.resetPassword(em); authMsg("Email de réinitialisation envoyé ✅"); }
+  catch (err) { authMsg("Erreur : " + (err.message || err), true); }
+};
+if (window.KonabSupa) {
+  refreshAuthUI();
+  KonabSupa.onAuthChange(() => refreshAuthUI());
+  // Bannières broadcast de l'admin, en direct
+  KonabSupa.onBroadcast((n) => {
+    const al = document.getElementById("alerte");
+    al.textContent = `📢 ${n.titre || "Info"} : ${n.message || ""}`;
+    al.classList.remove("hidden");
+    setTimeout(() => al.classList.add("hidden"), 20000);
+  });
+}
+
+// ===== PANEL ADMIN =====
+async function chargerAdmin() {
+  document.getElementById("admin-panel").classList.remove("hidden");
+  try {
+    const s = await KonabSupa.stats();
+    const villesTxt = Object.entries(s.parVille).map(([v, n]) => `${v}: ${n}`).join(" • ") || "—";
+    document.getElementById("admin-stats").innerHTML =
+      `<p>👥 <b>${s.total}</b> étudiants inscrits<br><small>${villesTxt}</small></p>` +
+      `<p>🚌 <b>${s.bus.length}</b> positions bus en base<br><small>${s.bus.slice(0, 8).map(b => `${b.ligne} (${b.ville}) par ${b.pseudo}`).join(" • ") || "aucune"}</small></p>`;
+    const users = await KonabSupa.listUsers();
+    document.getElementById("admin-count").textContent = `(${users.length})`;
+    document.getElementById("admin-users").innerHTML = users.map(u =>
+      `<div class="bus-item"><b>${u.pseudo}</b> <small>${u.email || ""}</small><br><small>${u.ville || ""} • ${u.universite || ""}</small> <button data-pseudo="${u.pseudo}" class="del-user" style="float:right">Suppr</button></div>`).join("") || "<p class='hint'>Aucun inscrit.</p>";
+    document.querySelectorAll(".del-user").forEach(btn => {
+      btn.onclick = async () => {
+        if (!confirm(`Supprimer ${btn.dataset.pseudo} ?`)) return;
+        try { await KonabSupa.deleteUser(btn.dataset.pseudo); chargerAdmin(); }
+        catch (e) { alert("Erreur : " + (e.message || e)); }
+      };
+    });
+  } catch (e) { document.getElementById("admin-stats").innerHTML = `<p class="hint">Erreur: ${e.message || e}</p>`; }
+}
+document.getElementById("btn-admin-refresh").onclick = chargerAdmin;
+document.getElementById("btn-broadcast").onclick = async () => {
+  const t = document.getElementById("admin-titre").value.trim(), m = document.getElementById("admin-msg").value.trim();
+  if (!t || !m) return alert("Titre + message requis");
+  try { await KonabSupa.broadcast(t, m, getVille()); alert("Message envoyé 📢"); document.getElementById("admin-titre").value = ""; document.getElementById("admin-msg").value = ""; }
+  catch (e) { alert("Erreur : " + (e.message || e)); }
+};
+document.getElementById("btn-purge").onclick = async () => {
+  try { const n = await KonabSupa.purgeBus(10); alert(`${n} position(s) supprimée(s) 🧹`); }
+  catch (e) { alert("Erreur : " + (e.message || e)); }
 };
 afficherVille(villeSel.value);
 remplirSelectsVille(villeSel.value);
@@ -353,7 +446,12 @@ const btnDansBus = document.getElementById("btn-dans-bus");
 const btnStop = document.getElementById("btn-stop");
 const statut = document.getElementById("statut-partage");
 
-btnDansBus.onclick = () => {
+btnDansBus.onclick = async () => {
+  if (window.KonabSupa && !(await KonabSupa.getSession())) {
+    alert("Connecte-toi d'abord pour partager ta position 🔐");
+    document.getElementById("auth-card").scrollIntoView({ behavior: "smooth" });
+    return;
+  }
   const ligne = document.getElementById("ligne").value;
   if (!navigator.geolocation) return alert("GPS non supporté");
   navigator.geolocation.getCurrentPosition(() => {

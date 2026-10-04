@@ -1,5 +1,5 @@
 // Service Worker KonabMap - offline de base
-const CACHE = 'konabmap-v4';
+const CACHE = 'konabmap-v5';
 const ASSETS = ['/', '/index.html', '/style.css', '/app.js', '/supabase-client.js', '/manifest.json', '/logo.png'];
 
 self.addEventListener('install', (e) => {
