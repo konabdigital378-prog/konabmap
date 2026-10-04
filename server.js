@@ -3,16 +3,25 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
-app.use(express.static(path.join(__dirname, 'public')));
+const DIST = path.join(__dirname, 'client', 'dist');
+app.use(express.static(fs.existsSync(DIST) ? DIST : path.join(__dirname, 'public')));
 
 // Healthcheck pour Render
 app.get('/health', (req, res) => {
   res.json({ ok: true, bus: busActifs.size, time: new Date().toISOString() });
+});
+
+// Fallback SPA React
+app.get('*', (req, res, next) => {
+  const index = path.join(DIST, 'index.html');
+  if (req.method === 'GET' && fs.existsSync(index)) return res.sendFile(index);
+  next();
 });
 
 // busActifs : socketId -> { pseudo, ligne, lat, lng, vitesse, cap, updatedAt }

@@ -1,0 +1,57 @@
+import { createClient } from '@supabase/supabase-js';
+
+const URL = localStorage.getItem('supa_url') || 'https://cyrkhrdjeztcjcwzsszg.supabase.co';
+const KEY = localStorage.getItem('supa_key') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5cmtocmRqZXp0Y2pjd3pzc3pnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExNDQ5ODcsImV4cCI6MjEwNjcyMDk4N30.rBm983A6GSWaUBFSozILGsgbZXQFCqeelyPE_EtcsiM';
+
+export const supa = createClient(URL, KEY);
+
+export async function saveProfil({ pseudo, ville, universite }) {
+  const { data: { user } } = await supa.auth.getUser();
+  const { error } = await supa.from('profils').upsert(
+    { pseudo, ville, universite, user_id: user?.id || null, email: user?.email || null, updated_at: new Date().toISOString() },
+    { onConflict: 'pseudo' }
+  );
+  if (error) throw error;
+}
+
+export async function shareBusPosition({ pseudo, ville, ligne, affluence, lat, lng, vitesse }) {
+  const { error } = await supa.from('bus_positions').upsert(
+    { pseudo, ville, ligne, affluence: affluence || 'places', lat, lng, vitesse: vitesse || 0, updated_at: new Date().toISOString() },
+    { onConflict: 'pseudo' }
+  );
+  if (error) throw error;
+}
+
+export async function getSession() {
+  const { data } = await supa.auth.getSession();
+  return data.session;
+}
+
+export async function isAdmin() {
+  const { data: { user } } = await supa.auth.getUser();
+  if (!user) return false;
+  const { data, error } = await supa.from('admins').select('user_id').eq('user_id', user.id).limit(1);
+  return !error && data && data.length > 0;
+}
+
+export async function adminStats() {
+  const [profils, bus] = await Promise.all([
+    supa.from('profils').select('ville', { count: 'exact' }),
+    supa.from('bus_positions').select('ville,ligne,pseudo,updated_at'),
+  ]);
+  const parVille = {};
+  (profils.data || []).forEach((p) => { parVille[p.ville] = (parVille[p.ville] || 0) + 1; });
+  return { total: profils.count ?? (profils.data || []).length, parVille, bus: bus.data || [] };
+}
+
+export async function listUsers() {
+  const { data } = await supa.from('profils').select('pseudo,email,ville,universite,updated_at').order('updated_at', { ascending: false }).limit(100);
+  return data || [];
+}
+
+export async function notify(titre, message) {
+  try {
+    if (Notification.permission === 'default') await Notification.requestPermission();
+    if (Notification.permission === 'granted') new Notification(titre, { body: message, icon: 'logo.png' });
+  } catch { /* ignore */ }
+}
