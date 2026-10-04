@@ -6,16 +6,20 @@ import { socket } from '../socket.js';
 import { distanceM, formatDist, formatEta, getFavs, AFFL } from '../lib.js';
 import { shareBusPosition, notify } from '../supabase.js';
 
-export default function Accueil({ ville, userPos, bus, go }) {
+export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocus }) {
   const mapRef = useRef(null);
   const mapObj = useRef(null);
   const lignesLayer = useRef(null);
+  const highlightLayer = useRef(null);
   const busMarkers = useRef({});
   const [ligne, setLigne] = useState('');
   const [affluence, setAffluence] = useState('places');
+  const [destination, setDestination] = useState('');
   const [partage, setPartage] = useState(false);
   const [favsOnly, setFavsOnly] = useState(false);
+  const [alertesFavs, setAlertesFavs] = useState(false);
   const [filtre, setFiltre] = useState('toutes');
+  const [recherche, setRecherche] = useState('');
   const [alertSonore, setAlertSonore] = useState(true);
   const watchId = useRef(null);
   const debutPartage = useRef(null);
@@ -35,6 +39,7 @@ export default function Accueil({ ville, userPos, bus, go }) {
     mapObj.current = L.map(mapRef.current).setView([12.3714, -1.5197], 12);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapObj.current);
     lignesLayer.current = L.layerGroup().addTo(mapObj.current);
+    highlightLayer.current = L.layerGroup().addTo(mapObj.current);
     return () => mapObj.current.remove();
   }, []);
 
@@ -60,7 +65,19 @@ export default function Accueil({ ville, userPos, bus, go }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ville]);
 
-  // Position utilisateur
+  // Ligne mise en avant depuis Lignes/Trajet
+  useEffect(() => {
+    const map = mapObj.current;
+    if (!map) return;
+    highlightLayer.current.clearLayers();
+    if (focusLigne && LIGNES[focusLigne]) {
+      const l = LIGNES[focusLigne];
+      const latlngs = l.arrets.map((a) => [a.lat, a.lng]);
+      L.polyline(latlngs, { color: '#FEDD00', weight: 9, opacity: 0.9 }).addTo(highlightLayer.current);
+      L.polyline(latlngs, { color: l.couleur, weight: 5, opacity: 1 }).addTo(highlightLayer.current);
+      map.fitBounds(latlngs, { padding: [30, 30] });
+    }
+  }, [focusLigne]);
   useEffect(() => {
     const map = mapObj.current;
     if (!map || !userPos) return;
@@ -103,7 +120,7 @@ export default function Accueil({ ville, userPos, bus, go }) {
         watchId.current = navigator.geolocation.watchPosition(
           (pos) => {
             const payload = {
-              pseudo: pseudo(), ligne, ville, affluence,
+              pseudo: pseudo(), ligne, ville, affluence, destination,
               lat: pos.coords.latitude, lng: pos.coords.longitude,
               vitesse: pos.coords.speed || 0,
             };
@@ -142,9 +159,16 @@ export default function Accueil({ ville, userPos, bus, go }) {
 
   const alerter = (b, distTxt) => {
     if (!alertSonore || dejaAlerte.current[b.id]) return;
+    if (alertesFavs && !getFavs().includes(b.ligne)) return;
     dejaAlerte.current[b.id] = true;
     notify(`Bus ${b.ligne} proche !`, `À ${distTxt} de toi, prépare-toi !`).catch(() => {});
     setTimeout(() => delete dejaAlerte.current[b.id], 15000);
+  };
+
+  const signaler = (b) => {
+    if (!confirm(`Signaler un souci sur le bus ${b.ligne} (panne, retard, conduite...) ?`)) return;
+    socket.emit('signalement', { busId: b.id });
+    alert('Signalement envoyé, merci 🙏');
   };
 
   return (
@@ -185,6 +209,11 @@ export default function Accueil({ ville, userPos, bus, go }) {
           <option value="debout">🟡 Debout seulement</option>
           <option value="plein">🔴 Complet</option>
         </select>
+        <label>Tu descends où ? (optionnel)</label>
+        <select value={destination} onChange={(e) => setDestination(e.target.value)}>
+          <option value="">— Non précisé —</option>
+          {(LIGNES[ligne]?.arrets || []).map((a) => <option key={a.nom} value={a.nom}>{a.nom}</option>)}
+        </select>
         <div className="row">
           {!partage ? (
             <button className="btn share" onClick={demarrer}>🟢 Je suis DANS le bus<br /><small>Partager ma position</small></button>
@@ -199,6 +228,7 @@ export default function Accueil({ ville, userPos, bus, go }) {
 
       <section className="card">
         <h2>🚏 Bus autour de moi</h2>
+        <input value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder="🔍 Filtrer (ligne ou pseudo)..." style={{ marginBottom: 8 }} />
         <div className="chips">
           <button className={'chip' + (filtre === 'toutes' ? ' on' : '')} onClick={() => setFiltre('toutes')}>Tous</button>
           {[...new Set(bus.map((b) => b.ligne))].map((c) => (
@@ -208,24 +238,32 @@ export default function Accueil({ ville, userPos, bus, go }) {
         <label><input type="checkbox" checked={favsOnly} onChange={(e) => setFavsOnly(e.target.checked)} /> ⭐ Mes lignes favorites seulement</label>
         <div id="liste-bus">
           {visibles.length === 0 && <p className="hint">Aucun bus partagé pour l'instant. Monte dans un bus et partage !</p>}
-          {visibles.map((b) => {
+          {visibles
+            .filter((b) => !recherche || (b.ligne + ' ' + b.pseudo).toLowerCase().includes(recherche.toLowerCase()))
+            .map((b) => {
             const d = userPos ? distanceM(userPos.lat, userPos.lng, b.lat, b.lng) : null;
             const proche = d !== null && d < 800;
             if (proche) alerter(b, formatDist(d));
             const age = b.updatedAt ? Math.max(0, Math.round((Date.now() - b.updatedAt) / 1000)) : null;
             return (
               <div key={b.id} className={'bus-item' + (proche ? ' proche' : '')}>
-                <b>🚌 {b.ligne}</b> par {b.pseudo}<br />
+                <span style={{ display: 'inline-block', width: 12, height: 12, borderRadius: '50%', background: LIGNES[b.ligne]?.couleur || '#009639', marginRight: 6 }}></span>
+                <b>🚌 {b.ligne}</b> par {b.pseudo}
+                {b.signalements > 0 && <span style={{ color: '#c11f1f', fontWeight: 800 }}> • ⚠️ x{b.signalements}</span>}<br />
                 📏 {d === null ? '—' : formatDist(d)} • ⏱️ {d === null ? '—' : formatEta(d)}
                 {b.vitesse > 1 ? ` • ${Math.round(b.vitesse * 3.6)} km/h` : ''}
                 {age !== null ? (age < 8 ? ' • 🟢 en direct' : ` • maj il y a ${age}s`) : ''}<br />
-                <small>{AFFL[b.affluence] || ''}</small>
-                <button style={{ float: 'right' }} onClick={() => voir(b)}>Voir</button>
+                <small>{AFFL[b.affluence] || ''}{b.destination ? ` • ↓ ${b.destination}` : ''}</small>
+                <div className="row" style={{ marginTop: 6 }}>
+                  <button className="btn secondary" style={{ marginTop: 0 }} onClick={() => voir(b)}>Voir</button>
+                  <button className="btn secondary" style={{ marginTop: 0 }} onClick={() => signaler(b)}>⚠️ Souci</button>
+                </div>
               </div>
             );
           })}
         </div>
         <label><input type="checkbox" checked={alertSonore} onChange={(e) => setAlertSonore(e.target.checked)} /> M'alerter quand un bus est à moins de 800m</label>
+        <label><input type="checkbox" checked={alertesFavs} onChange={(e) => setAlertesFavs(e.target.checked)} /> Alertes seulement pour mes lignes ⭐</label>
       </section>
     </div>
   );

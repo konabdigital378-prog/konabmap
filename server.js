@@ -46,19 +46,30 @@ io.on('connection', (socket) => {
   socket.emit('bus-list', [...busActifs.values()]);
 
   socket.on('partage-position', (data) => {
-    // data: { pseudo, ligne, ville, affluence, lat, lng, vitesse }
+    // data: { pseudo, ligne, ville, affluence, destination, lat, lng, vitesse }
     if (typeof data.lat !== 'number' || typeof data.lng !== 'number') return;
+    const prev = busActifs.get(socket.id);
     busActifs.set(socket.id, {
       id: socket.id,
       pseudo: String((data.pseudo || 'Étudiant')).slice(0, 30),
       ligne: String((data.ligne || 'L1')).slice(0, 10),
       ville: String((data.ville || 'Ouagadougou')).slice(0, 30),
       affluence: ['places', 'debout', 'plein'].includes(data.affluence) ? data.affluence : 'places',
+      destination: String((data.destination || '')).slice(0, 60),
+      signalements: prev?.signalements || 0,
       lat: data.lat,
       lng: data.lng,
       vitesse: data.vitesse || 0,
       updatedAt: Date.now()
     });
+  });
+
+  socket.on('signalement', ({ busId }) => {
+    const b = busActifs.get(busId);
+    if (b) {
+      b.signalements = (b.signalements || 0) + 1;
+      io.emit('bus-list', [...busActifs.values()]);
+    }
   });
 
   socket.on('stop-partage', () => {

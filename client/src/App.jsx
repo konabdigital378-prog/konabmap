@@ -23,6 +23,7 @@ export default function App() {
   const [busAll, setBusAll] = useState([]);
   const [userPos, setUserPos] = useState(null);
   const [installEvt, setInstallEvt] = useState(null);
+  const [focusLigne, setFocusLigne] = useState('');
   const [theme, setTheme] = useState(() => localStorage.getItem('km-theme') || 'light');
 
   useEffect(() => {
@@ -104,6 +105,12 @@ export default function App() {
     }
   }, []);
 
+  const voirLigne = (code) => {
+    setFocusLigne(code);
+    setPage('accueil');
+    window.scrollTo({ top: 0 });
+  };
+
   const busVille = busAll.filter((b) => !b.ville || b.ville === profil.ville);
 
   const installer = async () => {
@@ -132,9 +139,9 @@ export default function App() {
       )}
 
       <main>
-        {page === 'accueil' && <Accueil ville={profil.ville} userPos={userPos} bus={busVille} go={(p) => { setPage(p); window.scrollTo({ top: 0 }); }} />}
-        {page === 'lignes' && <Lignes ville={profil.ville} />}
-        {page === 'trajet' && <Trajet ville={profil.ville} />}
+        {page === 'accueil' && <Accueil ville={profil.ville} userPos={userPos} bus={busVille} go={(p) => { setPage(p); window.scrollTo({ top: 0 }); }} focusLigne={focusLigne} clearFocus={() => setFocusLigne('')} />}
+        {page === 'lignes' && <Lignes ville={profil.ville} onVoir={voirLigne} />}
+        {page === 'trajet' && <Trajet ville={profil.ville} onVoir={voirLigne} />}
         {page === 'compte' && <Compte session={session} onSession={refreshSession} />}
         {page === 'admin' && (admin ? <Admin ville={profil.ville} /> : (
           <div className="page"><section className="card"><p className="hint">🔒 Réservé aux administrateurs.</p></section></div>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { LIGNES } from '../data.js';
 
-export default function Trajet({ ville }) {
+export default function Trajet({ ville, onVoir }) {
   const lignesVille = Object.entries(LIGNES).filter(([, l]) => (l.ville || 'Ouagadougou') === ville);
   const arrets = [...new Set(lignesVille.flatMap(([, l]) => l.arrets.map((a) => a.nom)))];
   const univ = arrets.find((n) => n.includes('Universit')) || arrets[0];
@@ -36,7 +36,7 @@ export default function Trajet({ ville }) {
         <button className="btn primary" onClick={chercher}>Chercher</button>
         <div id="resultat-itineraire">
           {res && res.directes && res.directes.map(([c, l]) => (
-            <p key={c}>✅ Prends <b>{c}</b> : {l.nom}<br /><small>{dep} → {arr} direct, sans correspondance</small></p>
+            <p key={c}>✅ Prends <b>{c}</b> : {l.nom}<br /><small>{dep} → {arr} direct, sans correspondance</small><br /><button className="btn secondary" onClick={() => onVoir(c)}>📍 Voir sur la carte</button></p>
           ))}
           {res && !res.directes && (
             <p>⚠️ Pas de direct à {ville}. Options :<br />Depuis <b>{dep}</b> : {res.lDep.join(', ') || 'aucune'}<br />Jusqu'à <b>{arr}</b> : {res.lArr.join(', ') || 'aucune'}<br /><small>Correspondance conseillée à <b>{localStorage.getItem('universite') || 'ton université'}</b>.</small></p>

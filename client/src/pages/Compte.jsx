@@ -145,9 +145,18 @@ function Historique() {
   });
   if (trajets.length === 0) return null;
   const vider = () => { localStorage.setItem('trajets', '[]'); setTrajets([]); };
+  const minutes = trajets.reduce((s, t) => s + (t.dureeMin || 0), 0);
+  const top = Object.entries(trajets.reduce((m, t) => { m[t.ligne] = (m[t.ligne] || 0) + 1; return m; }, {}))
+    .sort((a, b) => b[1] - a[1])[0];
   return (
     <section className="card">
-      <h2>🧾 Mes derniers trajets partagés</h2>
+      <h2>📊 Mes statistiques</h2>
+      <div className="hero-stats">
+        <div className="hero-stat" style={{ background: '#eafff1', color: '#062a5e' }}>🚌 {trajets.length}<small>trajets partagés</small></div>
+        <div className="hero-stat" style={{ background: '#eafff1', color: '#062a5e' }}>⏱️ {minutes}<small>minutes guidées</small></div>
+        <div className="hero-stat" style={{ background: '#eafff1', color: '#062a5e' }}>⭐ {top ? top[0] : '—'}<small>ligne préférée</small></div>
+      </div>
+      <h2 style={{ marginTop: 12 }}>🧾 Mes derniers trajets partagés</h2>
       {trajets.map((t, i) => (
         <div key={i} className="hist-item">
           <span>🚌 <b>{t.ligne}</b> • {t.ville}</span>

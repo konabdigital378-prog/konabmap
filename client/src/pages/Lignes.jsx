@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { LIGNES } from '../data.js';
 import { getFavs } from '../lib.js';
 
-export default function Lignes({ ville }) {
+export default function Lignes({ ville, onVoir }) {
   const [q, setQ] = useState('');
   const [favs, setFavs] = useState(getFavs());
 
@@ -33,6 +33,7 @@ export default function Lignes({ ville }) {
               </summary>
               <p><small>🛣️ {l.detail || ''}</small></p>
               <ul>{l.arrets.map((a) => <li key={a.nom}>{a.nom}</li>)}</ul>
+              <button className="btn secondary" onClick={() => onVoir(c)}>📍 Voir sur la carte</button>
               <small>Source: sotraco.bf • Horaires et tarifs : agences SOTRACO</small>
             </details>
           ))}
