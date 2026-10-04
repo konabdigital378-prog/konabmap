@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>KonabMap - Bus SOTRACO Étudiants Burkina</title>
 <link rel="icon" type="image/png" href="logo.png" />
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#009639" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="KonabMap" />
+<link rel="apple-touch-icon" href="logo.png" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="style.css" />
 </head>
@@ -78,9 +85,26 @@
 </main>
 
 <footer>Fait pour les étudiants du Burkina 🇧🇫 • Données collaboratives : la position vient des étudiants dans les bus</footer>
+<button id="btn-install" class="btn primary hidden" style="position:fixed;bottom:16px;right:16px;width:auto;z-index:2000">📲 Installer l'app</button>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script src="app.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+}
+// Bouton installer
+let deferredPrompt = null;
+const btnInstall = document.getElementById('btn-install');
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault(); deferredPrompt = e; btnInstall.classList.remove('hidden');
+});
+btnInstall.onclick = async () => {
+  if (!deferredPrompt) return alert("Ouvre le menu du navigateur → Ajouter à l'écran d'accueil");
+  deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null;
+  btnInstall.classList.add('hidden');
+};
+</script>
 </body>
 </html>

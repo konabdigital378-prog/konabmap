@@ -1,0 +1,28 @@
+{
+  "name": "KonabMap - Bus SOTRACO Étudiants Burkina",
+  "short_name": "KonabMap",
+  "description": "Suivez vos bus SOTRACO en temps réel à Ouaga",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFF9EC",
+  "theme_color": "#009639",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
