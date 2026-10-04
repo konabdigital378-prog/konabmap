@@ -263,7 +263,7 @@ function remplirSelectsVille(ville) {
   for (const selId of ["mon-arret", "depart", "arrivee"]) {
     const sel = document.getElementById(selId);
     sel.innerHTML = "";
-    arrets.forEach(([nom]) => {
+    arrets.forEach((a, nom) => {
       const o = document.createElement("option"); o.value = nom; o.textContent = nom; sel.appendChild(o);
     });
   }
