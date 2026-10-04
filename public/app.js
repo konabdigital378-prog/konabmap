@@ -358,16 +358,39 @@ function authMsg(t, err) {
   const el = document.getElementById("auth-msg");
   el.textContent = t; el.style.color = err ? "red" : "green";
 }
+// Traduit les erreurs Supabase en français simple + anti-spam (compte à rebours)
+function erreurAmicale(e) {
+  const m = String(e?.message || e || "");
+  let s;
+  if (/after (\d+) seconds/i.test(m)) s = `Trop de tentatives ⏳ Attends ${m.match(/after (\d+) seconds/i)[1]} secondes puis réessaie une seule fois.`;
+  else if (/user already registered/i.test(m)) s = "Compte déjà créé 👍 Clique « Se connecter ».";
+  else if (/invalid login credentials/i.test(m)) s = "Email ou mot de passe incorrect ❌";
+  else if (/email not confirmed/i.test(m)) s = "Vérifie tes emails et clique le lien de confirmation 📧 (ou désactive la confirmation dans Supabase).";
+  else if (/password/i.test(m)) s = "Mot de passe : 6 caractères minimum.";
+  else s = "Erreur : " + m;
+  authMsg(s, true);
+  // Bloque les boutons 60s pour éviter le martèlement
+  if (/security purposes|after \d+ seconds/i.test(m)) {
+    const b1 = document.getElementById("btn-login"), b2 = document.getElementById("btn-signup");
+    b1.disabled = b2.disabled = true;
+    let n = 60;
+    const iv = setInterval(() => {
+      n--;
+      authMsg(`Trop de tentatives ⏳ Réessaie dans ${n}s (une seule fois).`, true);
+      if (n <= 0) { clearInterval(iv); b1.disabled = b2.disabled = false; authMsg("Tu peux réessayer ✅"); }
+    }, 1000);
+  }
+}
 document.getElementById("btn-signup").onclick = async () => {
   const em = document.getElementById("auth-email").value.trim(), pw = document.getElementById("auth-pass").value;
   if (!em || pw.length < 6) return authMsg("Email + mot de passe (6 caractères min)", true);
   try { await KonabSupa.signUp(em, pw); authMsg("Compte créé ✅ Vérifie tes emails si demandé, puis connecte-toi."); }
-  catch (e) { authMsg("Erreur : " + (e.message || e), true); }
+  catch (e) { erreurAmicale(e); }
 };
 document.getElementById("btn-login").onclick = async () => {
   const em = document.getElementById("auth-email").value.trim(), pw = document.getElementById("auth-pass").value;
   try { await KonabSupa.signIn(em, pw); authMsg("Connecté ✅"); refreshAuthUI(); }
-  catch (e) { authMsg("Erreur : " + (e.message || e), true); }
+  catch (e) { erreurAmicale(e); }
 };
 document.getElementById("btn-logout").onclick = async () => {
   await KonabSupa.signOut(); authMsg(""); refreshAuthUI();
