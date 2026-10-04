@@ -56,18 +56,24 @@
       <h2>📍 Où est le prochain bus ?</h2>
       <label>Ligne du bus</label>
       <select id="ligne"></select>
+      <label>Places libres dans ton bus ?</label>
+      <select id="affluence">
+        <option value="places">✅ Places libres</option>
+        <option value="debout">🟡 Debout seulement</option>
+        <option value="plein">🔴 Complet</option>
+      </select>
 
       <div class="row">
         <button id="btn-dans-bus" class="btn share">🟢 Je suis DANS le bus<br><small>Partager ma position</small></button>
         <button id="btn-stop" class="btn stop hidden">🔴 Arrêter<br><small>Descendre</small></button>
       </div>
       <p id="statut-partage" class="hint">Tu n'es pas en partage. Les autres ne te voient pas.</p>
-      <button id="btn-demo" class="btn secondary">▶️ Démo sans GPS (simuler un bus à Ouaga)</button>
     </section>
 
     <!-- BUS AUTOUR -->
     <section class="card">
       <h2>🚏 Bus autour de moi</h2>
+      <label><input type="checkbox" id="favs-only" /> ⭐ Mes lignes favorites seulement</label>
       <div id="liste-bus"><p class="hint">Aucun bus partagé pour l'instant. Monte dans un bus et partage !</p></div>
       <label><input type="checkbox" id="alerte-sonore" checked /> M'alerter quand un bus est à moins de 800m</label>
     </section>
@@ -86,7 +92,9 @@
     <!-- HORAIRES -->
     <section class="card">
       <h2>🕒 Lignes & arrêts SOTRACO</h2>
+      <input id="recherche-ligne" placeholder="🔍 Rechercher une ligne ou un arrêt..." style="margin-bottom:8px" />
       <div id="lignes-info"></div>
+      <p class="hint">Itinéraires : sotraco.bf • Horaires et tarifs : agences SOTRACO. Points majeurs vérifiés OpenStreetMap, arrêts intermédiaires indicatifs.</p>
     </section>
   </aside>
 </main>

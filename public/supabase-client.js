@@ -25,10 +25,10 @@ window.KonabSupa = (() => {
   }
 
   // Position bus partagée (en + du Socket.io temps réel)
-  async function shareBusPosition({ pseudo, ville, ligne, lat, lng, vitesse }) {
+  async function shareBusPosition({ pseudo, ville, ligne, affluence, lat, lng, vitesse }) {
     const c = db(); if (!c) return;
     await c.from("bus_positions").upsert(
-      { pseudo, ville, ligne, lat, lng, vitesse: vitesse || 0, updated_at: new Date().toISOString() },
+      { pseudo, ville, ligne, affluence: affluence || 'places', lat, lng, vitesse: vitesse || 0, updated_at: new Date().toISOString() },
       { onConflict: "pseudo" }
     );
   }
