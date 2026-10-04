@@ -107,9 +107,12 @@ export default function Premium() {
 
   return (
     <div className="page" id="page-premium">
+      <div className="premium-banner">
+        <img src="etudiant.jpg" alt="Étudiants KonabMap" />
+        <div className="premium-badge">💎 {prix} FCFA / {jours} jours</div>
+      </div>
       <section className="card" style={{ textAlign: 'center', background: 'linear-gradient(160deg,#062a5e,#009639)', color: '#fff' }}>
-        <div style={{ fontSize: 48 }}>💎</div>
-        <h2 style={{ color: '#fff' }}>Pass Premium — {prix} FCFA / {jours} jours</h2>
+        <h2 style={{ color: '#fff' }}>Pass Premium</h2>
         {premium ? (
           <p>✅ Actif jusqu'au <b>{premium.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}</b></p>
         ) : premium === false ? (

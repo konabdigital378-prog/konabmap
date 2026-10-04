@@ -1,6 +1,6 @@
 // Service Worker KonabMap (build React/Vite)
 const CACHE = 'konabmap-react-v1';
-const CORE = ['/', '/index.html', '/manifest.json', '/logo.png'];
+const CORE = ['/', '/index.html', '/manifest.json', '/logo.png', '/etudiant.jpg'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).then(() => self.skipWaiting()));

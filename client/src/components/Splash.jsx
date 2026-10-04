@@ -8,6 +8,7 @@ export default function Splash({ done }) {
 
   return (
     <div id="splash" onClick={done}>
+      <div className="splash-photo"><img src="etudiant.jpg" alt="Étudiant KonabMap" /></div>
       <img src="logo.png" alt="KonabMap" id="splash-logo" />
       <div id="splash-titre">KONABMAP</div>
       <div id="splash-soustitre">Suivez vos bus en temps réel 🚌</div>

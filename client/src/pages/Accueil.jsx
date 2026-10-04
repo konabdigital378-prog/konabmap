@@ -175,19 +175,25 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
   return (
     <div className="page" id="page-accueil">
       <div className="hero">
-        <div className="hero-ville">📍 {ville}</div>
-        <div className="hero-titre">{univ ? univ.replace(/^Université\s*/, '') : 'Choisis ton université'}</div>
-        <div className="hero-stats">
-          <div className="hero-stat">🚌 {bus.length}<small>bus en direct</small></div>
-          <div className="hero-stat">🗺️ {lignesVille.length}<small>lignes</small></div>
-          <div className="hero-stat">🎓 {VILLES[ville]?.universites.length || 0}<small>universités</small></div>
+        <div>
+          <div className="hero-ville">📍 {ville}</div>
+          <div className="hero-titre">{univ ? univ.replace(/^Université\s*/, '') : 'Choisis ton université'}</div>
+          <div className="hero-stats">
+            <div className="hero-stat">🚌 {bus.length}<small>bus en direct</small></div>
+            <div className="hero-stat">🗺️ {lignesVille.length}<small>lignes</small></div>
+            <div className="hero-stat">🎓 {VILLES[ville]?.universites.length || 0}<small>universités</small></div>
+          </div>
         </div>
+        <img className="hero-photo" src="etudiant.jpg" alt="Étudiant" />
       </div>
 
       {!univ && (
-        <div className="cta-card">
-          👋 Dis-nous où tu étudies pour voir tes bus !
-          <button className="btn primary" onClick={() => go('compte')}>Choisir ma ville et mon université</button>
+        <div className="cta-card cta-photo">
+          <img src="etudiant.jpg" alt="Étudiant" />
+          <div>
+            👋 Dis-nous où tu étudies pour voir tes bus !
+            <button className="btn primary" onClick={() => go('compte')}>Choisir ma ville et mon université</button>
+          </div>
         </div>
       )}
 

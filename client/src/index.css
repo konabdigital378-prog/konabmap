@@ -45,7 +45,8 @@ summary{cursor:pointer;font-size:14px}
 .fav{font-size:16px}
 /* ===== SPLASH ===== */
 #splash{position:fixed;inset:0;z-index:5000;background:linear-gradient(160deg,#062a5e,#009639 70%,#FEDD00);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
-#splash-logo{width:150px;height:150px;object-fit:contain;background:#fff;border-radius:30px;padding:10px;animation:logo-pop 1.2s ease-out,logo-flotte 2.2s ease-in-out 1.2s infinite}
+.splash-photo img{width:180px;height:180px;object-fit:cover;object-position:top;border-radius:50%;border:5px solid var(--jaune);box-shadow:0 8px 30px rgba(0,0,0,.4);animation:logo-pop 1.2s ease-out}
+#splash-logo.old{display:none}
 @keyframes logo-pop{0%{transform:scale(0) rotate(-30deg);opacity:0}60%{transform:scale(1.15) rotate(5deg);opacity:1}100%{transform:scale(1) rotate(0)}}
 @keyframes logo-flotte{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
 #splash-titre{font-size:34px;font-weight:900;color:#fff;letter-spacing:4px;animation:titre 1s .4s both}
@@ -70,8 +71,16 @@ footer{text-align:center;padding:12px 12px 96px;color:var(--muted);font-size:13p
 [data-theme="dark"] #nav{background:#141d17}
 [data-theme="dark"] .btn.secondary{background:#232f28;color:var(--texte)}
 /* ===== HERO ACCUEIL ===== */
-.hero{background:linear-gradient(120deg,var(--vert-fonce),var(--vert) 65%,#00c853);color:#fff;border-radius:22px;padding:18px;box-shadow:var(--ombre);position:relative;overflow:hidden}
-.hero::after{content:"🚌";position:absolute;right:10px;bottom:-18px;font-size:110px;opacity:.18}
+.hero{background:linear-gradient(120deg,var(--vert-fonce),var(--vert) 65%,#00c853);color:#fff;border-radius:22px;padding:18px;box-shadow:var(--ombre);position:relative;overflow:hidden;display:flex;align-items:center;gap:14px}
+.hero::after{content:"";position:absolute;right:-40px;top:-40px;width:160px;height:160px;border-radius:50%;background:#ffffff14}
+.hero-photo{width:96px;height:96px;object-fit:cover;object-position:top;border-radius:50%;border:3px solid var(--jaune);margin-left:auto;flex:none;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.splash-photo img{width:180px;height:180px;object-fit:cover;object-position:top;border-radius:50%;border:5px solid var(--jaune);box-shadow:0 8px 30px rgba(0,0,0,.4);animation:logo-pop 1.2s ease-out}
+#splash-logo{width:84px;height:84px;object-fit:contain;background:#fff;border-radius:24px;padding:8px;margin-top:-26px;border:3px solid #fff;animation:titre 1s .5s both}
+.cta-photo{display:flex;gap:12px;align-items:center}
+.cta-photo img{width:88px;height:88px;object-fit:cover;object-position:top;border-radius:20px;flex:none}
+.premium-banner{position:relative;border-radius:var(--rayon);overflow:hidden;box-shadow:var(--ombre)}
+.premium-banner img{width:100%;height:210px;object-fit:cover;object-position:top;display:block}
+.premium-badge{position:absolute;left:12px;bottom:12px;background:var(--jaune);color:#3a2b00;font-weight:900;border-radius:999px;padding:8px 16px;box-shadow:0 4px 12px rgba(0,0,0,.35)}
 .hero-ville{font-size:13px;font-weight:700;opacity:.85;text-transform:uppercase;letter-spacing:2px}
 .hero-titre{font-size:24px;font-weight:900;margin:2px 0 10px}
 .hero-stats{display:flex;gap:8px;flex-wrap:wrap}
