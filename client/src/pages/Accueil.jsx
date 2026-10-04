@@ -113,6 +113,11 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
 
   const demarrer = () => {
     if (!navigator.geolocation) return alert('GPS non supporté');
+    if (!isPremium) {
+      alert('💎 Le partage demande un abonnement actif (100 FCFA/30j)');
+      goPremium();
+      return;
+    }
     navigator.geolocation.getCurrentPosition(
       () => {
         setPartage(true);

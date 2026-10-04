@@ -30,7 +30,27 @@ try {
   }
 } catch (e) { console.warn('Supabase admin inactif:', e.message); }
 const PRIX = 100, JOURS = 30;
-const MERCHANT = process.env.MERCHANT_NUMBER || '+226 -- -- -- --';
+const MERCHANT = process.env.MERCHANT_NUMBER || '+226 65 41 37 99';
+
+function codeAbo() {
+  return 'KMAB-' + Array.from({ length: 6 }, () => 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]).join('');
+}
+
+async function envoyerCodeAbo(userId, jours, ville, motif) {
+  // Génère un code unique, le marque utilisé, et l'envoie par notification
+  for (let i = 0; i < 5; i++) {
+    const code = codeAbo();
+    const { error } = await supaAdmin.from('promo_codes').insert({ code, jours, used_by: userId, used_at: new Date().toISOString() });
+    if (!error) {
+      await supaAdmin.from('notifications').insert({
+        titre: 'Paiement vérifié ✅', message: `${motif} Ton code d'activation : ${code} — entre-le dans Premium pour valider ton abonnement.`,
+        user_id: userId, ville: ville || null,
+      });
+      return code;
+    }
+  }
+  throw new Error('Ressaie dans un instant');
+}
 
 function refCommande() {
   return 'KM-' + Array.from({ length: 6 }, () => 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]).join('');
@@ -93,9 +113,9 @@ app.put('/api/pay', async (req, res) => {
     const aMarchand = marchandChiffres.length >= 8 && chiffres.includes(marchandChiffres);
     const confidence = (aMontant ? 50 : 0) + (aMarchand ? 50 : 0);
     if (confidence >= 100) {
-      const fin = await activerPremium(user.id, order.jours);
+      const code = await envoyerCodeAbo(user.id, order.jours, null, 'Preuve convaincante. ');
       await supaAdmin.from('orders').update({ status: 'auto_validated', ocr_text: String(ocrText || '').slice(0, 4000), ocr_confidence: confidence, validated_at: new Date().toISOString() }).eq('id', order.id);
-      return res.json({ auto: true, confidence, fin });
+      return res.json({ auto: true, confidence, code });
     }
     await supaAdmin.from('orders').update({ status: 'manual_pending', ocr_text: String(ocrText || '').slice(0, 4000), ocr_confidence: confidence }).eq('id', order.id);
     res.json({ auto: false, confidence });
@@ -137,9 +157,9 @@ app.post('/api/admin/validate', async (req, res) => {
     const { data: order } = await supaAdmin.from('orders').select('*').eq('id', orderId).single();
     if (!order) throw new Error('Commande introuvable');
     if (ok) {
-      const fin = await activerPremium(order.user_id, order.jours);
+      const code = await envoyerCodeAbo(order.user_id, order.jours, null, 'Paiement validé par l\'admin. ');
       await supaAdmin.from('orders').update({ status: 'validated', validated_at: new Date().toISOString() }).eq('id', order.id);
-      return res.json({ ok: true, fin });
+      return res.json({ ok: true, code });
     }
     await supaAdmin.from('orders').update({ status: 'rejected' }).eq('id', order.id);
     res.json({ ok: true });

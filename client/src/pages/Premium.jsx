@@ -83,7 +83,8 @@ export default function Premium() {
       setOcrPct(100);
       const d = await api('/api/pay', { method: 'PUT', body: JSON.stringify({ orderId: order.id, ocrText: data.text }) });
       if (d.auto) {
-        setMsg([`Paiement vérifié ✅ Pass actif jusqu'au ${new Date(d.fin).toLocaleDateString('fr-FR')} !`, false]);
+        setMsg([`Paiement vérifié ✅ Ton code : ${d.code} — il est aussi dans tes notifications. Entre-le ci-dessous pour activer ton pass !`, false]);
+        setCode(d.code);
         setOrder(null);
         refreshPremium();
       } else {

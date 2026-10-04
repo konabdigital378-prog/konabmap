@@ -7,10 +7,11 @@ const TABS = [
   { id: 'admin', emoji: '🛡️', label: 'Admin', admin: true },
 ];
 
-export default function BottomNav({ page, go, isAdmin }) {
+export default function BottomNav({ page, go, isAdmin, verrouille }) {
+  const visibles = TABS.filter((t) => (!t.admin || isAdmin) && (!verrouille || ['premium', 'compte'].includes(t.id)));
   return (
     <nav id="nav">
-      {TABS.filter((t) => !t.admin || isAdmin).map((t) => (
+      {visibles.map((t) => (
         <button key={t.id} data-page={t.id} className={page === t.id ? 'active' : ''} onClick={() => go(t.id)}>
           {t.emoji}
           <small>{t.label}</small>

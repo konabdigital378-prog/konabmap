@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Splash from './components/Splash.jsx';
 import BottomNav from './components/BottomNav.jsx';
 import Accueil from './pages/Accueil.jsx';
@@ -26,6 +26,8 @@ export default function App() {
   const [userPos, setUserPos] = useState(null);
   const [installEvt, setInstallEvt] = useState(null);
   const [focusLigne, setFocusLigne] = useState('');
+  const sessionRef = useRef(null);
+  sessionRef.current = session;
   const [theme, setTheme] = useState(() => localStorage.getItem('km-theme') || 'light');
 
   useEffect(() => {
@@ -91,13 +93,18 @@ export default function App() {
     return () => navigator.geolocation.clearWatch(id);
   }, []);
 
-  // Broadcast admin en direct
+  // Broadcast : perso (mon user_id), ma ville, ou collectif
   useEffect(() => {
     const ch = supa
       .channel('broadcast')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, (p) => {
-        setBanner(`📢 ${p.new.titre || 'Info'} : ${p.new.message || ''}`);
-        setTimeout(() => setBanner(''), 20000);
+        const n = p.new;
+        const pourMoi = !n.user_id || (sessionRef.current && n.user_id === sessionRef.current.user.id);
+        const maVille = !n.ville || n.ville === (localStorage.getItem('ville') || 'Ouagadougou');
+        if (pourMoi && maVille) {
+          setBanner(`📢 ${n.titre || 'Info'} : ${n.message || ''}`);
+          setTimeout(() => setBanner(''), 25000);
+        }
       })
       .subscribe();
     return () => supa.removeChannel(ch);
@@ -129,6 +136,11 @@ export default function App() {
 
   const busVille = busAll.filter((b) => !b.ville || b.ville === profil.ville);
 
+  // Abonnement obligatoire : sans pass actif (et non admin), seul Premium/Compte accessibles
+  const profilComplet = !!localStorage.getItem('universite');
+  const bloque = !!session && profilComplet && !isPremium && !admin;
+  const pageAffichee = bloque && page !== 'compte' ? 'premium' : page;
+
   const installer = async () => {
     if (!installEvt) return alert("Ouvre le menu du navigateur → Ajouter à l'écran d'accueil");
     installEvt.prompt();
@@ -150,16 +162,17 @@ export default function App() {
       </header>
 
       {banner && <div id="alerte">{banner}</div>}
+      {bloque && <div id="alerte">💎 Abonnement requis (100 FCFA/30j) pour utiliser les services — active ton pass ci-dessous 👇</div>}
       {bienvenue && (
         <div id="bienvenue"><img src="logo.png" alt="" /><span>{bienvenue}</span></div>
       )}
 
       <main>
-        {page === 'accueil' && <Accueil ville={profil.ville} userPos={userPos} bus={busVille} isPremium={isPremium} goPremium={goPremium} go={(p) => { setPage(p); window.scrollTo({ top: 0 }); }} focusLigne={focusLigne} clearFocus={() => setFocusLigne('')} />}
-        {page === 'lignes' && <Lignes ville={profil.ville} onVoir={voirLigne} isPremium={isPremium} goPremium={goPremium} />}
-        {page === 'trajet' && <Trajet ville={profil.ville} onVoir={voirLigne} />}
-        {page === 'compte' && <Compte session={session} onSession={refreshSession} isPremium={isPremium} goPremium={goPremium} />}
-        {page === 'premium' && <Premium />}
+        {pageAffichee === 'accueil' && <Accueil ville={profil.ville} userPos={userPos} bus={busVille} isPremium={isPremium} goPremium={goPremium} go={(p) => { setPage(p); window.scrollTo({ top: 0 }); }} focusLigne={focusLigne} clearFocus={() => setFocusLigne('')} />}
+        {pageAffichee === 'lignes' && <Lignes ville={profil.ville} onVoir={voirLigne} isPremium={isPremium} goPremium={goPremium} />}
+        {pageAffichee === 'trajet' && <Trajet ville={profil.ville} onVoir={voirLigne} />}
+        {pageAffichee === 'compte' && <Compte session={session} onSession={refreshSession} isPremium={isPremium} goPremium={goPremium} />}
+        {pageAffichee === 'premium' && <Premium />}
         {page === 'compte' && <Compte session={session} onSession={refreshSession} />}
         {page === 'admin' && (admin ? <Admin ville={profil.ville} /> : (
           <div className="page"><section className="card"><p className="hint">🔒 Réservé aux administrateurs.</p></section></div>
@@ -174,7 +187,7 @@ export default function App() {
         </button>
       )}
 
-      <BottomNav page={page} go={(p) => { setPage(p); window.scrollTo({ top: 0 }); }} isAdmin={admin} />
+      <BottomNav page={pageAffichee} go={(p) => { setPage(p); window.scrollTo({ top: 0 }); }} isAdmin={admin} verrouille={bloque} />
     </>
   );
 }

@@ -135,7 +135,37 @@ export default function Compte({ session, onSession, isPremium, goPremium }) {
       )}
 
       {session && <Historique isPremium={isPremium} goPremium={goPremium} />}
+      {session && <MesNotifications />}
     </div>
+  );
+}
+
+function MesNotifications() {
+  const [notifs, setNotifs] = useState([]);
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: { user } } = await supa.auth.getUser();
+        if (!user) return;
+        const ville = localStorage.getItem('ville') || 'Ouagadougou';
+        const { data } = await supa.from('notifications').select('titre,message,created_at')
+          .or(`user_id.eq.${user.id},user_id.is.null`)
+          .order('created_at', { ascending: false }).limit(20);
+        setNotifs((data || []).filter((n) => !n.ville || n.ville === ville));
+      } catch { /* ignore */ }
+    })();
+  }, []);
+  if (notifs.length === 0) return null;
+  return (
+    <section className="card">
+      <h2>🔔 Mes notifications</h2>
+      {notifs.map((n, i) => (
+        <div key={i} className="hist-item">
+          <span><b>{n.titre}</b><br /><small>{n.message}</small></span>
+          <small>{new Date(n.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</small>
+        </div>
+      ))}
+    </section>
   );
 }
 
