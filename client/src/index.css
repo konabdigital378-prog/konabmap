@@ -93,5 +93,19 @@ footer{text-align:center;padding:12px 12px 96px;color:var(--muted);font-size:13p
 .chip.on{background:var(--vert);color:#fff;border-color:var(--vert)}
 .locate-btn{position:absolute;right:12px;top:12px;z-index:500;background:#fff;border:2px solid #00000020;border-radius:12px;font-size:20px;padding:6px 10px;cursor:pointer;box-shadow:var(--ombre)}
 .map-wrap{position:relative}
+.carte-outils{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px}
+/* ===== PINS CARTE ===== */
+.bus-pin{display:flex;align-items:center;gap:5px;background:#fff;border:2px solid var(--c,#009639);border-radius:999px;padding:3px 10px 3px 6px;font-weight:900;font-size:13px;color:#16211a;box-shadow:0 3px 10px rgba(0,0,0,.35);white-space:nowrap;position:relative}
+.bus-pin i{width:10px;height:10px;border-radius:50%;flex:none}
+.bus-pin.live{border-color:#00c853}
+.bus-pin.live::after{content:"";position:absolute;inset:-6px;border:2px solid #00c853;border-radius:999px;opacity:.7;animation:ping 1.6s ease-out infinite}
+@keyframes ping{0%{transform:scale(.8);opacity:.8}100%{transform:scale(1.25);opacity:0}}
+.moi-pin{width:22px;height:22px;border-radius:50%;background:#1a73e8;border:3px solid #fff;box-shadow:0 0 0 6px rgba(26,115,232,.25),0 2px 8px rgba(0,0,0,.4);animation:moi-pulse 2s infinite}
+@keyframes moi-pulse{0%,100%{box-shadow:0 0 0 4px rgba(26,115,232,.30),0 2px 8px rgba(0,0,0,.4)}50%{box-shadow:0 0 0 9px rgba(26,115,232,.12),0 2px 8px rgba(0,0,0,.4)}}
+.univ-pin{width:34px;height:34px;border-radius:50%;background:linear-gradient(140deg,#009639,#00c853);display:flex;align-items:center;justify-content:center;font-size:18px;border:2px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.35)}
+.leaflet-popup-content-wrapper{border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.leaflet-popup-content{font-family:system-ui;margin:10px 14px;font-size:13px}
+.bus-pop b{color:#009639}
+.leaflet-control-attribution{font-size:10px;background:#ffffffaa!important}
 .hist-item{display:flex;justify-content:space-between;align-items:center;border:1px solid #00000014;border-radius:12px;padding:8px 10px;margin:6px 0;font-size:14px}
 .theme-btn{background:#ffffff26;border:none;color:#fff;font-size:18px;border-radius:50%;width:38px;height:38px;cursor:pointer}

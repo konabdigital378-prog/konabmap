@@ -25,6 +25,15 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
   const debutPartage = useRef(null);
   const dejaAlerte = useRef({});
   const userMarker = useRef(null);
+  const tileRef = useRef(null);
+  const [fond, setFond] = useState(() => localStorage.getItem('fond') || 'clair');
+  const [grandeCarte, setGrandeCarte] = useState(false);
+
+  const FONDS = {
+    clair: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    sombre: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  };
 
   const univ = localStorage.getItem('universite') || '';
   const lignesVille = Object.entries(LIGNES).filter(([, l]) => (l.ville || 'Ouagadougou') === ville);
@@ -36,12 +45,34 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
 
   // Init carte
   useEffect(() => {
-    mapObj.current = L.map(mapRef.current).setView([12.3714, -1.5197], 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapObj.current);
+    mapObj.current = L.map(mapRef.current, { zoomControl: false }).setView([12.3714, -1.5197], 12);
+    L.control.zoom({ position: 'bottomright' }).addTo(mapObj.current);
+    tileRef.current = L.tileLayer(FONDS[localStorage.getItem('fond') || 'clair'], {
+      maxZoom: 19, attribution: '© OpenStreetMap · © CARTO · Imagerie © Esri',
+    }).addTo(mapObj.current);
     lignesLayer.current = L.layerGroup().addTo(mapObj.current);
     highlightLayer.current = L.layerGroup().addTo(mapObj.current);
     return () => mapObj.current.remove();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Changement de fond
+  useEffect(() => {
+    const map = mapObj.current;
+    if (!map || !tileRef.current) return;
+    map.removeLayer(tileRef.current);
+    tileRef.current = L.tileLayer(FONDS[fond], {
+      maxZoom: 19, attribution: '© OpenStreetMap · © CARTO · Imagerie © Esri',
+    }).addTo(mapObj.current);
+    localStorage.setItem('fond', fond);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fond]);
+
+  // Plein écran carte
+  useEffect(() => {
+    const map = mapObj.current;
+    if (map) setTimeout(() => map.invalidateSize(), 200);
+  }, [grandeCarte]);
 
   // Lignes de la ville
   useEffect(() => {
@@ -51,15 +82,17 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
     const v = VILLES[ville] || VILLES['Ouagadougou'];
     map.setView(v.centre, v.zoom);
     for (const [, l] of lignesVille) {
-      L.polyline(l.arrets.map((a) => [a.lat, a.lng]), { color: l.couleur, weight: 4, opacity: 0.7 }).addTo(lignesLayer.current);
+      L.polyline(l.arrets.map((a) => [a.lat, a.lng]), { color: l.couleur, weight: 4, opacity: 0.85 }).addTo(lignesLayer.current);
       l.arrets.forEach((a) => {
-        L.circleMarker([a.lat, a.lng], { radius: 7, color: '#000', fillColor: '#fff', fillOpacity: 1, weight: 2 })
+        L.circleMarker([a.lat, a.lng], { radius: 6, color: '#fff', fillColor: l.couleur, fillOpacity: 1, weight: 2 })
           .bindPopup(`<b>${a.nom}</b><br>${l.nom}`)
           .addTo(lignesLayer.current);
       });
     }
     v.universites.forEach((u) => {
-      L.marker([u.lat, u.lng]).bindPopup(`🎓 <b>${u.nom}</b>`).addTo(lignesLayer.current);
+      L.marker([u.lat, u.lng], { icon: L.divIcon({ className: '', html: '<div class="univ-pin">🎓</div>', iconSize: [34, 34], iconAnchor: [17, 17] }) })
+        .bindPopup(`🎓 <b>${u.nom}</b>`)
+        .addTo(lignesLayer.current);
     });
     setTimeout(() => map.invalidateSize(), 150);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -82,7 +115,9 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
     const map = mapObj.current;
     if (!map || !userPos) return;
     if (!userMarker.current) {
-      userMarker.current = L.marker([userPos.lat, userPos.lng]).addTo(map).bindPopup('Toi 📍');
+      userMarker.current = L.marker([userPos.lat, userPos.lng], {
+        icon: L.divIcon({ className: '', html: '<div class="moi-pin"></div>', iconSize: [24, 24], iconAnchor: [12, 12] }),
+      }).addTo(map).bindPopup('Toi 📍');
     } else userMarker.current.setLatLng([userPos.lat, userPos.lng]);
   }, [userPos]);
 
@@ -98,14 +133,22 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
       }
     }
     bus.forEach((b) => {
+      const couleur = LIGNES[b.ligne]?.couleur || '#009639';
+      const frais = b.updatedAt && Date.now() - b.updatedAt < 8000;
+      const affColor = b.affluence === 'plein' ? '#EF2D2D' : b.affluence === 'debout' ? '#f5a623' : '#00c853';
       const icon = L.divIcon({
         className: '',
-        html: `<div style="background:${LIGNES[b.ligne]?.couleur || '#009639'};color:#fff;border:2px solid #000;border-radius:20px;padding:4px 10px;font-weight:900;white-space:nowrap">🚌 ${b.ligne}</div>`,
-        iconSize: [70, 30],
+        html: `<div class="bus-pin${frais ? ' live' : ''}" style="--c:${couleur}"><span>🚌</span><b>${b.ligne}</b><i style="background:${affColor}"></i></div>`,
+        iconSize: [78, 34], iconAnchor: [39, 17],
       });
+      const popup = `<div class="bus-pop"><b>🚌 Bus ${b.ligne}</b><br>Par ${b.pseudo}${b.destination ? `<br>↓ ${b.destination}` : ''}${b.signalements > 0 ? `<br>⚠️ ${b.signalements} signalement(s)` : ''}</div>`;
       if (!busMarkers.current[b.id]) {
-        busMarkers.current[b.id] = L.marker([b.lat, b.lng], { icon }).addTo(map).bindPopup(`<b>Bus ${b.ligne}</b><br>Partagé par ${b.pseudo}`);
-      } else busMarkers.current[b.id].setLatLng([b.lat, b.lng]);
+        busMarkers.current[b.id] = L.marker([b.lat, b.lng], { icon }).addTo(map).bindPopup(popup);
+      } else {
+        busMarkers.current[b.id].setLatLng([b.lat, b.lng]);
+        busMarkers.current[b.id].setIcon(icon);
+        busMarkers.current[b.id].setPopupContent(popup);
+      }
     });
   }, [bus]);
 
@@ -203,7 +246,15 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
       )}
 
       <div className="map-wrap">
-        <div id="map" ref={mapRef}></div>
+        <div className="carte-outils">
+          {['clair', 'sombre', 'satellite'].map((f) => (
+            <button key={f} className={'chip' + (fond === f ? ' on' : '')} onClick={() => setFond(f)}>
+              {f === 'clair' ? '🗺️ Clair' : f === 'sombre' ? '🌙 Sombre' : '🛰️ Satellite'}
+            </button>
+          ))}
+          <button className="chip" onClick={() => setGrandeCarte((g) => !g)}>{grandeCarte ? '🔽 Réduire' : '⛶ Agrandir'}</button>
+        </div>
+        <div id="map" ref={mapRef} style={grandeCarte ? { height: '78vh' } : {}}></div>
         <button className="locate-btn" onClick={meLocaliser} title="Me localiser">📍</button>
       </div>
 
