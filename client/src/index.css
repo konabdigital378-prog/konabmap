@@ -62,3 +62,27 @@ summary{cursor:pointer;font-size:14px}
 #nav button small{font-size:11px;font-weight:700}
 #nav button.active{color:var(--vert);background:#eafff1}
 footer{text-align:center;padding:12px 12px 96px;color:var(--muted);font-size:13px}
+/* ===== MODE SOMBRE ===== */
+[data-theme="dark"]{--fond:#0e1512;--carte:#18211c;--texte:#eef4ef;--muted:#9db3a4;--ombre:0 6px 18px rgba(0,0,0,.45)}
+[data-theme="dark"] input,[data-theme="dark"] select{background:#101915;border-color:#2c3a31;color:var(--texte)}
+[data-theme="dark"] .bus-item{background:#1d2a22}
+[data-theme="dark"] details{background:#141d17}
+[data-theme="dark"] #nav{background:#141d17}
+[data-theme="dark"] .btn.secondary{background:#232f28;color:var(--texte)}
+/* ===== HERO ACCUEIL ===== */
+.hero{background:linear-gradient(120deg,var(--vert-fonce),var(--vert) 65%,#00c853);color:#fff;border-radius:22px;padding:18px;box-shadow:var(--ombre);position:relative;overflow:hidden}
+.hero::after{content:"🚌";position:absolute;right:10px;bottom:-18px;font-size:110px;opacity:.18}
+.hero-ville{font-size:13px;font-weight:700;opacity:.85;text-transform:uppercase;letter-spacing:2px}
+.hero-titre{font-size:24px;font-weight:900;margin:2px 0 10px}
+.hero-stats{display:flex;gap:8px;flex-wrap:wrap}
+.hero-stat{background:#ffffff26;border-radius:14px;padding:8px 14px;font-weight:800;font-size:14px;backdrop-filter:blur(4px)}
+.hero-stat small{display:block;font-weight:600;font-size:11px;opacity:.85}
+.cta-card{background:linear-gradient(120deg,#FEDD00,#ffb300);border-radius:var(--rayon);padding:16px;color:#3a2b00;font-weight:700;box-shadow:var(--ombre)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 0}
+.chip{flex:none;border:2px solid #00000020;background:#fff;border-radius:999px;padding:6px 12px;font-weight:700;font-size:13px;cursor:pointer}
+[data-theme="dark"] .chip{background:#1d2a22}
+.chip.on{background:var(--vert);color:#fff;border-color:var(--vert)}
+.locate-btn{position:absolute;right:12px;top:12px;z-index:500;background:#fff;border:2px solid #00000020;border-radius:12px;font-size:20px;padding:6px 10px;cursor:pointer;box-shadow:var(--ombre)}
+.map-wrap{position:relative}
+.hist-item{display:flex;justify-content:space-between;align-items:center;border:1px solid #00000014;border-radius:12px;padding:8px 10px;margin:6px 0;font-size:14px}
+.theme-btn{background:#ffffff26;border:none;color:#fff;font-size:18px;border-radius:50%;width:38px;height:38px;cursor:pointer}

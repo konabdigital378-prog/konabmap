@@ -23,6 +23,12 @@ export default function App() {
   const [busAll, setBusAll] = useState([]);
   const [userPos, setUserPos] = useState(null);
   const [installEvt, setInstallEvt] = useState(null);
+  const [theme, setTheme] = useState(() => localStorage.getItem('km-theme') || 'light');
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem('km-theme', theme);
+  }, [theme]);
 
   const montrerBienvenue = useCallback((pseudo, ville, retour) => {
     setBienvenue(retour ? `Bon retour ${pseudo} 👋 ! Voici les bus de ${ville}.` : `Bienvenue ${pseudo} 🎉 ! Voici ton environnement ${ville}.`);
@@ -115,6 +121,9 @@ export default function App() {
         <div className="logo"><img src="logo.png" alt="KonabMap" /> KonabMap</div>
         <div className="subtitle">SOTRACO • {profil.ville} • Pour étudiants</div>
         <div id="online-count">{busVille.length} bus en ligne</div>
+        <button className="theme-btn" onClick={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))} title="Mode sombre/clair">
+          {theme === 'light' ? '🌙' : '☀️'}
+        </button>
       </header>
 
       {banner && <div id="alerte">{banner}</div>}
@@ -123,7 +132,7 @@ export default function App() {
       )}
 
       <main>
-        {page === 'accueil' && <Accueil ville={profil.ville} userPos={userPos} bus={busVille} />}
+        {page === 'accueil' && <Accueil ville={profil.ville} userPos={userPos} bus={busVille} go={(p) => { setPage(p); window.scrollTo({ top: 0 }); }} />}
         {page === 'lignes' && <Lignes ville={profil.ville} />}
         {page === 'trajet' && <Trajet ville={profil.ville} />}
         {page === 'compte' && <Compte session={session} onSession={refreshSession} />}

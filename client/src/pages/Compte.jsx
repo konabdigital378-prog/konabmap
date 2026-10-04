@@ -133,6 +133,28 @@ export default function Compte({ session, onSession }) {
           <p className="hint">La plateforme affiche ensuite uniquement les bus, lignes et arrêts de ta ville.</p>
         </section>
       )}
+
+      {session && <Historique />}
     </div>
+  );
+}
+
+function Historique() {
+  const [trajets, setTrajets] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('trajets') || '[]'); } catch { return []; }
+  });
+  if (trajets.length === 0) return null;
+  const vider = () => { localStorage.setItem('trajets', '[]'); setTrajets([]); };
+  return (
+    <section className="card">
+      <h2>🧾 Mes derniers trajets partagés</h2>
+      {trajets.map((t, i) => (
+        <div key={i} className="hist-item">
+          <span>🚌 <b>{t.ligne}</b> • {t.ville}</span>
+          <small>{new Date(t.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} • {t.dureeMin} min</small>
+        </div>
+      ))}
+      <button className="btn secondary" onClick={vider}>Effacer l'historique</button>
+    </section>
   );
 }

@@ -6,7 +6,7 @@ import { socket } from '../socket.js';
 import { distanceM, formatDist, formatEta, getFavs, AFFL } from '../lib.js';
 import { shareBusPosition, notify } from '../supabase.js';
 
-export default function Accueil({ ville, userPos, bus }) {
+export default function Accueil({ ville, userPos, bus, go }) {
   const mapRef = useRef(null);
   const mapObj = useRef(null);
   const lignesLayer = useRef(null);
@@ -15,11 +15,14 @@ export default function Accueil({ ville, userPos, bus }) {
   const [affluence, setAffluence] = useState('places');
   const [partage, setPartage] = useState(false);
   const [favsOnly, setFavsOnly] = useState(false);
+  const [filtre, setFiltre] = useState('toutes');
   const [alertSonore, setAlertSonore] = useState(true);
   const watchId = useRef(null);
+  const debutPartage = useRef(null);
   const dejaAlerte = useRef({});
   const userMarker = useRef(null);
 
+  const univ = localStorage.getItem('universite') || '';
   const lignesVille = Object.entries(LIGNES).filter(([, l]) => (l.ville || 'Ouagadougou') === ville);
 
   useEffect(() => {
@@ -96,6 +99,7 @@ export default function Accueil({ ville, userPos, bus }) {
     navigator.geolocation.getCurrentPosition(
       () => {
         setPartage(true);
+        debutPartage.current = Date.now();
         watchId.current = navigator.geolocation.watchPosition(
           (pos) => {
             const payload = {
@@ -117,6 +121,12 @@ export default function Accueil({ ville, userPos, bus }) {
   const arreter = () => {
     if (watchId.current) navigator.geolocation.clearWatch(watchId.current);
     socket.emit('stop-partage');
+    // Historique local du trajet
+    try {
+      const h = JSON.parse(localStorage.getItem('trajets') || '[]');
+      h.unshift({ ligne, ville, date: new Date().toISOString(), dureeMin: debutPartage.current ? Math.max(1, Math.round((Date.now() - debutPartage.current) / 60000)) : 0 });
+      localStorage.setItem('trajets', JSON.stringify(h.slice(0, 20)));
+    } catch { /* ignore */ }
     setPartage(false);
   };
 
@@ -124,9 +134,11 @@ export default function Accueil({ ville, userPos, bus }) {
     if (watchId.current) navigator.geolocation.clearWatch(watchId.current);
   }, []);
 
-  const visibles = favsOnly ? bus.filter((b) => getFavs().includes(b.ligne)) : bus;
+  let visibles = favsOnly ? bus.filter((b) => getFavs().includes(b.ligne)) : bus;
+  if (filtre !== 'toutes') visibles = visibles.filter((b) => b.ligne === filtre);
 
   const voir = (b) => mapObj.current.setView([b.lat, b.lng], 15);
+  const meLocaliser = () => { if (userPos) mapObj.current.setView([userPos.lat, userPos.lng], 15); };
 
   const alerter = (b, distTxt) => {
     if (!alertSonore || dejaAlerte.current[b.id]) return;
@@ -137,7 +149,27 @@ export default function Accueil({ ville, userPos, bus }) {
 
   return (
     <div className="page" id="page-accueil">
-      <div id="map" ref={mapRef}></div>
+      <div className="hero">
+        <div className="hero-ville">📍 {ville}</div>
+        <div className="hero-titre">{univ ? univ.replace(/^Université\s*/, '') : 'Choisis ton université'}</div>
+        <div className="hero-stats">
+          <div className="hero-stat">🚌 {bus.length}<small>bus en direct</small></div>
+          <div className="hero-stat">🗺️ {lignesVille.length}<small>lignes</small></div>
+          <div className="hero-stat">🎓 {VILLES[ville]?.universites.length || 0}<small>universités</small></div>
+        </div>
+      </div>
+
+      {!univ && (
+        <div className="cta-card">
+          👋 Dis-nous où tu étudies pour voir tes bus !
+          <button className="btn primary" onClick={() => go('compte')}>Choisir ma ville et mon université</button>
+        </div>
+      )}
+
+      <div className="map-wrap">
+        <div id="map" ref={mapRef}></div>
+        <button className="locate-btn" onClick={meLocaliser} title="Me localiser">📍</button>
+      </div>
 
       <section className="card highlight">
         <h2>📍 Où est le prochain bus ?</h2>
@@ -167,6 +199,12 @@ export default function Accueil({ ville, userPos, bus }) {
 
       <section className="card">
         <h2>🚏 Bus autour de moi</h2>
+        <div className="chips">
+          <button className={'chip' + (filtre === 'toutes' ? ' on' : '')} onClick={() => setFiltre('toutes')}>Tous</button>
+          {[...new Set(bus.map((b) => b.ligne))].map((c) => (
+            <button key={c} className={'chip' + (filtre === c ? ' on' : '')} onClick={() => setFiltre(filtre === c ? 'toutes' : c)}>🚌 {c}</button>
+          ))}
+        </div>
         <label><input type="checkbox" checked={favsOnly} onChange={(e) => setFavsOnly(e.target.checked)} /> ⭐ Mes lignes favorites seulement</label>
         <div id="liste-bus">
           {visibles.length === 0 && <p className="hint">Aucun bus partagé pour l'instant. Monte dans un bus et partage !</p>}
