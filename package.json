@@ -1,0 +1,17 @@
+{
+  "name": "konabmap-sotraco",
+  "version": "1.0.0",
+  "description": "App collaborative SOTRACO Burkina - suivi bus en temps reel par les etudiants",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "vercel-build": "echo \"build ok\""
+  },
+  "engines": {
+    "node": "24.x"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  }
+}
