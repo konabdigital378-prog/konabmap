@@ -29,9 +29,16 @@ header{background:linear-gradient(90deg,var(--vert),#00b44a 50%,var(--jaune));co
 #bienvenue{display:flex;align-items:center;gap:12px;background:linear-gradient(90deg,#009639,#00b44a);color:#fff;border-radius:16px;padding:14px;margin:12px 12px 0;font-size:16px;font-weight:600;border:2px solid #00000030}
 #bienvenue.hidden{display:none}
 #bienvenue img{width:52px;height:52px;border-radius:50%;background:#fff;padding:3px}
-main{display:grid;grid-template-columns:2fr 1fr;gap:12px;padding:12px}
-#map{height:82vh;border-radius:16px;border:3px solid #000;min-height:400px}
+main{max-width:900px;margin:0 auto;padding:12px 12px 90px;display:flex;flex-direction:column;gap:12px}
+.page{display:flex;flex-direction:column;gap:12px}
+.page.hidden{display:none}
+#map{height:52vh;border-radius:16px;border:3px solid #000;min-height:320px}
 #panel{display:flex;flex-direction:column;gap:12px;max-height:82vh;overflow:auto}
+/* ===== NAVIGATION BAS ===== */
+#nav{position:fixed;left:0;right:0;bottom:0;z-index:2000;display:flex;background:#fff;border-top:3px solid #000;padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+#nav button{flex:1;border:none;background:none;font-size:22px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;color:#666;border-radius:12px;padding:6px 0}
+#nav button small{font-size:11px;font-weight:700}
+#nav button.active{color:var(--vert);background:#eafff1}
 .card{background:var(--carte);border-radius:16px;padding:14px;border:2px solid #00000015;box-shadow:0 4px 0 #00000015}
 .card.highlight{border:3px solid var(--vert);background:#eafff1}
 .card h2{margin:0 0 10px;font-size:18px}
@@ -50,5 +57,4 @@ input,select{width:100%;padding:10px;border-radius:10px;border:2px solid #000000
 .bus-item b{color:var(--vert)}
 .bus-item.proche{border-color:var(--vert);background:#e6ffe9;animation:pulse 1.5s infinite}
 @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.02)}100%{transform:scale(1)}}
-footer{text-align:center;padding:12px;color:#666;font-size:13px}
-@media(max-width:900px){main{grid-template-columns:1fr}#map{height:55vh}#panel{max-height:none}}
+footer{text-align:center;padding:12px 12px 90px;color:#666;font-size:13px}

@@ -216,6 +216,7 @@ let watchId = null;
 let alerteDejaJouee = {};
 
 map = L.map('map').setView([12.3714, -1.5197], 12);
+window._map = map;
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 let lignesLayer = L.layerGroup().addTo(map);
 
@@ -341,9 +342,15 @@ async function refreshAuthUI() {
   document.getElementById("profil-card").classList.toggle("hidden", !logged);
   if (logged) {
     document.getElementById("auth-qui").textContent = session.user.email;
-    if (await KonabSupa.isAdmin()) chargerAdmin();
-    else document.getElementById("admin-panel").classList.add("hidden");
+    if (await KonabSupa.isAdmin()) {
+      document.getElementById("nav-admin").classList.remove("hidden");
+      chargerAdmin();
+    } else {
+      document.getElementById("nav-admin").classList.add("hidden");
+      document.getElementById("admin-panel").classList.add("hidden");
+    }
   } else {
+    document.getElementById("nav-admin").classList.add("hidden");
     document.getElementById("admin-panel").classList.add("hidden");
   }
 }
@@ -387,6 +394,7 @@ if (window.KonabSupa) {
 // ===== PANEL ADMIN =====
 async function chargerAdmin() {
   document.getElementById("admin-panel").classList.remove("hidden");
+  document.getElementById("admin-noaccess").classList.add("hidden");
   try {
     const s = await KonabSupa.stats();
     const villesTxt = Object.entries(s.parVille).map(([v, n]) => `${v}: ${n}`).join(" • ") || "—";

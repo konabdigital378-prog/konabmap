@@ -33,45 +33,9 @@
 <div id="bienvenue" class="hidden"><img src="logo.png" alt="" /><span id="bienvenue-texte"></span></div>
 
 <main>
-  <div id="map"></div>
-
-  <aside id="panel">
-    <!-- COMPTE -->
-    <section class="card" id="auth-card">
-      <h2>🔐 Mon compte</h2>
-      <div id="auth-form">
-        <label>Email</label>
-        <input id="auth-email" type="email" placeholder="toi@exemple.com" autocomplete="email" />
-        <label>Mot de passe</label>
-        <input id="auth-pass" type="password" placeholder="••••••••" autocomplete="current-password" />
-        <div class="row">
-          <button id="btn-login" class="btn primary">Se connecter</button>
-          <button id="btn-signup" class="btn secondary">Créer un compte</button>
-        </div>
-        <p class="hint"><a href="#" id="link-reset">Mot de passe oublié ?</a></p>
-        <p id="auth-msg" class="hint"></p>
-      </div>
-      <div id="auth-ok" class="hidden">
-        <p>✅ Connecté : <b id="auth-qui"></b></p>
-        <button id="btn-logout" class="btn secondary">Se déconnecter</button>
-      </div>
-    </section>
-
-    <!-- CONNEXION -->
-    <section class="card hidden" id="profil-card">
-      <h2>👋 Connexion étudiant</h2>
-      <label>Ton prénom / pseudo</label>
-      <input id="pseudo" placeholder="Ex: Awa" />
-      <label>Ta ville</label>
-      <select id="ville"></select>
-      <label>Ton université</label>
-      <select id="universite"></select>
-      <label>Tu es où ? (arrêt proche)</label>
-      <select id="mon-arret"></select>
-      <button id="save-profil" class="btn primary">Se connecter</button>
-      <p class="hint">La plateforme affiche ensuite uniquement les bus, lignes et arrêts de ta ville.</p>
-    </section>
-
+  <!-- PAGE ACCUEIL : carte + partage + bus -->
+  <div class="page" id="page-accueil">
+    <div id="map"></div>
     <!-- MODE -->
     <section class="card highlight">
       <h2>📍 Où est le prochain bus ?</h2>
@@ -98,7 +62,20 @@
       <div id="liste-bus"><p class="hint">Aucun bus partagé pour l'instant. Monte dans un bus et partage !</p></div>
       <label><input type="checkbox" id="alerte-sonore" checked /> M'alerter quand un bus est à moins de 800m</label>
     </section>
+  </div>
 
+  <!-- PAGE LIGNES -->
+  <div class="page hidden" id="page-lignes">
+    <section class="card">
+      <h2>🕒 Lignes & arrêts SOTRACO</h2>
+      <input id="recherche-ligne" placeholder="🔍 Rechercher une ligne ou un arrêt..." style="margin-bottom:8px" />
+      <div id="lignes-info"></div>
+      <p class="hint">Itinéraires : sotraco.bf • Horaires et tarifs : agences SOTRACO. Points majeurs vérifiés OpenStreetMap, arrêts intermédiaires indicatifs.</p>
+    </section>
+  </div>
+
+  <!-- PAGE TRAJET -->
+  <div class="page hidden" id="page-trajet">
     <!-- ITINERAIRE -->
     <section class="card">
       <h2>🧭 Quel bus prendre ?</h2>
@@ -109,15 +86,49 @@
       <button id="btn-itineraire" class="btn primary">Chercher</button>
       <div id="resultat-itineraire"></div>
     </section>
+  </div>
 
-    <!-- HORAIRES -->
-    <section class="card">
-      <h2>🕒 Lignes & arrêts SOTRACO</h2>
-      <input id="recherche-ligne" placeholder="🔍 Rechercher une ligne ou un arrêt..." style="margin-bottom:8px" />
-      <div id="lignes-info"></div>
-      <p class="hint">Itinéraires : sotraco.bf • Horaires et tarifs : agences SOTRACO. Points majeurs vérifiés OpenStreetMap, arrêts intermédiaires indicatifs.</p>
+  <!-- PAGE COMPTE -->
+  <div class="page hidden" id="page-compte">
+    <!-- COMPTE -->
+    <section class="card" id="auth-card">
+      <h2>🔐 Mon compte</h2>
+      <div id="auth-form">
+        <label>Email</label>
+        <input id="auth-email" type="email" placeholder="toi@exemple.com" autocomplete="email" />
+        <label>Mot de passe</label>
+        <input id="auth-pass" type="password" placeholder="••••••••" autocomplete="current-password" />
+        <div class="row">
+          <button id="btn-login" class="btn primary">Se connecter</button>
+          <button id="btn-signup" class="btn secondary">Créer un compte</button>
+        </div>
+        <p class="hint"><a href="#" id="link-reset">Mot de passe oublié ?</a></p>
+        <p id="auth-msg" class="hint"></p>
+      </div>
+      <div id="auth-ok" class="hidden">
+        <p>✅ Connecté : <b id="auth-qui"></b></p>
+        <button id="btn-logout" class="btn secondary">Se déconnecter</button>
+      </div>
     </section>
 
+    <!-- PROFIL -->
+    <section class="card hidden" id="profil-card">
+      <h2>👋 Connexion étudiant</h2>
+      <label>Ton prénom / pseudo</label>
+      <input id="pseudo" placeholder="Ex: Awa" />
+      <label>Ta ville</label>
+      <select id="ville"></select>
+      <label>Ton université</label>
+      <select id="universite"></select>
+      <label>Tu es où ? (arrêt proche)</label>
+      <select id="mon-arret"></select>
+      <button id="save-profil" class="btn primary">Se connecter</button>
+      <p class="hint">La plateforme affiche ensuite uniquement les bus, lignes et arrêts de ta ville.</p>
+    </section>
+  </div>
+
+  <!-- PAGE ADMIN -->
+  <div class="page hidden" id="page-admin">
     <!-- ADMIN -->
     <section class="card hidden" id="admin-panel" style="border:3px solid #660099">
       <h2>🛡️ Panel Admin</h2>
@@ -132,11 +143,22 @@
       <h3>🧹 Nettoyage positions</h3>
       <button id="btn-purge" class="btn secondary">Supprimer positions de +10 min</button>
     </section>
-  </aside>
+    <section class="card" id="admin-noaccess">
+      <p class="hint">🔒 Réservé aux administrateurs.</p>
+    </section>
+  </div>
 </main>
 
+<nav id="nav">
+  <button data-page="accueil" class="active">🏠<small>Accueil</small></button>
+  <button data-page="lignes">🗺️<small>Lignes</small></button>
+  <button data-page="trajet">🧭<small>Trajet</small></button>
+  <button data-page="compte">👤<small>Compte</small></button>
+  <button data-page="admin" id="nav-admin" class="hidden">🛡️<small>Admin</small></button>
+</nav>
+
 <footer>Fait pour les étudiants du Burkina 🇧🇫 • Données collaboratives : la position vient des étudiants dans les bus</footer>
-<button id="btn-install" class="btn primary hidden" style="position:fixed;bottom:16px;right:16px;width:auto;z-index:2000">📲 Installer l'app</button>
+<button id="btn-install" class="btn primary hidden" style="position:fixed;bottom:84px;right:16px;width:auto;z-index:2000">📲 Installer l'app</button>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/socket.io/socket.io.js"></script>
@@ -153,14 +175,24 @@ window.addEventListener('load', () => {
 });
 document.getElementById('splash').addEventListener('click', function() { this.classList.add('fini'); });
 
+// ===== NAVIGATION PAGES =====
+function allerPage(nom) {
+  document.querySelectorAll(".page").forEach(p => p.classList.add("hidden"));
+  document.getElementById("page-" + nom).classList.remove("hidden");
+  document.querySelectorAll("#nav button").forEach(b => b.classList.toggle("active", b.dataset.page === nom));
+  if (nom === "accueil" && window._map) setTimeout(() => window._map.invalidateSize(), 100);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+document.querySelectorAll("#nav button").forEach(b => { b.onclick = () => allerPage(b.dataset.page); });
+
 // ===== BIENVENUE + REDIRECTION AUTO VERS SON ENVIRONNEMENT =====
 function montrerBienvenue(pseudo, ville, retour) {
-  const b = document.getElementById('bienvenue');
-  document.getElementById('bienvenue-texte').textContent =
+  const b = document.getElementById("bienvenue");
+  document.getElementById("bienvenue-texte").textContent =
     (retour ? `Bon retour ${pseudo} 👋 ! Voici les bus de ${ville}.` : `Bienvenue ${pseudo} 🎉 ! Voici ton environnement ${ville}.`);
-  b.classList.remove('hidden');
-  document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  setTimeout(() => b.classList.add('hidden'), 9000);
+  b.classList.remove("hidden");
+  allerPage("accueil");
+  setTimeout(() => b.classList.add("hidden"), 9000);
 }
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
