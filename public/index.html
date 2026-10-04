@@ -16,6 +16,13 @@
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+<!-- SPLASH D'ENTRÉE -->
+<div id="splash">
+  <img src="logo.png" alt="KonabMap" id="splash-logo" />
+  <div id="splash-titre">KONABMAP</div>
+  <div id="splash-soustitre">Suivez vos bus en temps réel 🚌</div>
+  <div id="splash-loader"><span></span><span></span><span></span></div>
+</div>
 <header>
   <div class="logo"><img src="logo.png" alt="KonabMap" /> KonabMap</div>
   <div class="subtitle">SOTRACO • Choisis ta ville • Pour étudiants</div>
@@ -23,6 +30,7 @@
 </header>
 
 <div id="alerte" class="hidden"></div>
+<div id="bienvenue" class="hidden"><img src="logo.png" alt="" /><span id="bienvenue-texte"></span></div>
 
 <main>
   <div id="map"></div>
@@ -88,8 +96,28 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/socket.io/socket.io.js"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
 <script src="app.js"></script>
 <script>
+// ===== SPLASH : se lève après chargement =====
+window.addEventListener('load', () => {
+  setTimeout(() => document.getElementById('splash').classList.add('fini'), 2200);
+  // Si déjà connecté, message de retour + direction vers son environnement
+  const pseudo = localStorage.getItem('pseudo'), ville = localStorage.getItem('ville');
+  if (pseudo && ville) setTimeout(() => montrerBienvenue(pseudo, ville, true), 2400);
+});
+document.getElementById('splash').addEventListener('click', function() { this.classList.add('fini'); });
+
+// ===== BIENVENUE + REDIRECTION AUTO VERS SON ENVIRONNEMENT =====
+function montrerBienvenue(pseudo, ville, retour) {
+  const b = document.getElementById('bienvenue');
+  document.getElementById('bienvenue-texte').textContent =
+    (retour ? `Bon retour ${pseudo} 👋 ! Voici les bus de ${ville}.` : `Bienvenue ${pseudo} 🎉 ! Voici ton environnement ${ville}.`);
+  b.classList.remove('hidden');
+  document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  setTimeout(() => b.classList.add('hidden'), 9000);
+}
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
 }

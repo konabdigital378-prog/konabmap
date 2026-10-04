@@ -295,14 +295,21 @@ villeSel.onchange = () => {
   remplirSelectsVille(villeSel.value);
   document.getElementById("btn-demo").textContent = `▶️ Démo sans GPS (simuler un bus à ${villeSel.value})`;
 };
-document.getElementById("save-profil").onclick = () => {
-  localStorage.setItem("pseudo", pseudoInput.value || "Étudiant");
-  localStorage.setItem("ville", villeSel.value);
-  localStorage.setItem("universite", document.getElementById("universite").value);
+document.getElementById("save-profil").onclick = async () => {
+  const pseudo = pseudoInput.value.trim() || "Étudiant";
+  const ville = villeSel.value, univ = document.getElementById("universite").value;
+  localStorage.setItem("pseudo", pseudo);
+  localStorage.setItem("ville", ville);
+  localStorage.setItem("universite", univ);
   localStorage.setItem("mon-arret", document.getElementById("mon-arret").value);
-  afficherVille(villeSel.value);
-  remplirSelectsVille(villeSel.value);
-  alert(`Connecté ✅ : ${pseudoInput.value || "Étudiant"} • ${villeSel.value} • ${document.getElementById("universite").value}`);
+  afficherVille(ville);
+  remplirSelectsVille(ville);
+  // Stockage Supabase (si configuré) + notification push d'accueil
+  if (window.KonabSupa) {
+    KonabSupa.saveProfil({ pseudo, ville, universite: univ }).catch(() => {});
+    KonabSupa.notify(`Bienvenue ${pseudo} !`, `Environnement ${ville} activé 🚌`).catch(() => {});
+  }
+  montrerBienvenue(pseudo, ville, false);
 };
 afficherVille(villeSel.value);
 remplirSelectsVille(villeSel.value);
@@ -343,11 +350,13 @@ btnDansBus.onclick = () => {
     statut.textContent = "🟢 Tu partages ta position comme BUS " + ligne + ". Les autres te voient !";
     statut.style.color = "green";
     watchId = navigator.geolocation.watchPosition(pos => {
-      socket.emit("partage-position", {
+      const payload = {
         pseudo: getPseudo(), ligne, ville: getVille(),
         lat: pos.coords.latitude, lng: pos.coords.longitude,
         vitesse: pos.coords.speed || 0
-      });
+      };
+      socket.emit("partage-position", payload);
+      if (window.KonabSupa) KonabSupa.shareBusPosition(payload).catch(() => {});
     }, err => alert("Active la localisation GPS"), { enableHighAccuracy: true, maximumAge: 2000 });
   }, () => alert("Autorise la localisation pour partager comme bus 🙏"));
 };
@@ -376,7 +385,9 @@ document.getElementById("btn-demo").onclick = () => {
     t += 0.2; if (t >= 1) { t = 0; i++; }
     const lat = a.lat + (b.lat - a.lat) * t;
     const lng = a.lng + (b.lng - a.lng) * t;
-    socket.emit("partage-position", { pseudo: getPseudo() + " (démo)", ligne, ville: getVille(), lat, lng, vitesse: 8 });
+    const payload = { pseudo: getPseudo() + " (démo)", ligne, ville: getVille(), lat, lng, vitesse: 8 };
+    socket.emit("partage-position", payload);
+    if (window.KonabSupa) KonabSupa.shareBusPosition(payload).catch(() => {});
   }, 2000);
 };
 

@@ -1,6 +1,6 @@
 // Service Worker KonabMap - offline de base
-const CACHE = 'konabmap-v2';
-const ASSETS = ['/', '/index.html', '/style.css', '/app.js', '/manifest.json', '/logo.png'];
+const CACHE = 'konabmap-v3';
+const ASSETS = ['/', '/index.html', '/style.css', '/app.js', '/supabase-client.js', '/manifest.json', '/logo.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));

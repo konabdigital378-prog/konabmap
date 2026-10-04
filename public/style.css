@@ -11,6 +11,24 @@ header{background:linear-gradient(90deg,var(--vert),#00b44a 50%,var(--jaune));co
 #online-count{margin-left:auto;background:#000;color:var(--jaune);padding:6px 14px;border-radius:20px;font-weight:700}
 #alerte{position:sticky;top:0;z-index:1000;padding:12px;text-align:center;font-weight:800;background:var(--jaune);border-bottom:3px solid #000}
 #alerte.hidden{display:none}
+/* ===== SPLASH ANIMÉ ===== */
+#splash{position:fixed;inset:0;z-index:5000;background:linear-gradient(160deg,#062a5e,#009639 70%,#FEDD00);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;transition:opacity .6s,visibility .6s}
+#splash.fini{opacity:0;visibility:hidden}
+#splash-logo{width:150px;height:150px;object-fit:contain;background:#fff;border-radius:30px;padding:10px;animation:logo-pop 1.2s ease-out,logo-flotte 2.2s ease-in-out 1.2s infinite}
+@keyframes logo-pop{0%{transform:scale(0) rotate(-30deg);opacity:0}60%{transform:scale(1.15) rotate(5deg);opacity:1}100%{transform:scale(1) rotate(0)}}
+@keyframes logo-flotte{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+#splash-titre{font-size:34px;font-weight:900;color:#fff;letter-spacing:4px;animation:titre 1s .4s both}
+@keyframes titre{from{opacity:0;letter-spacing:14px}to{opacity:1;letter-spacing:4px}}
+#splash-soustitre{color:#FFF9EC;font-weight:600}
+#splash-loader{display:flex;gap:8px;margin-top:10px}
+#splash-loader span{width:12px;height:12px;border-radius:50%;background:#fff;animation:rebond 1s infinite}
+#splash-loader span:nth-child(2){animation-delay:.15s}
+#splash-loader span:nth-child(3){animation-delay:.3s}
+@keyframes rebond{0%,100%{transform:translateY(0);opacity:.5}50%{transform:translateY(-10px);opacity:1}}
+/* ===== MESSAGE BIENVENUE ===== */
+#bienvenue{display:flex;align-items:center;gap:12px;background:linear-gradient(90deg,#009639,#00b44a);color:#fff;border-radius:16px;padding:14px;margin:12px 12px 0;font-size:16px;font-weight:600;border:2px solid #00000030}
+#bienvenue.hidden{display:none}
+#bienvenue img{width:52px;height:52px;border-radius:50%;background:#fff;padding:3px}
 main{display:grid;grid-template-columns:2fr 1fr;gap:12px;padding:12px}
 #map{height:82vh;border-radius:16px;border:3px solid #000;min-height:400px}
 #panel{display:flex;flex-direction:column;gap:12px;max-height:82vh;overflow:auto}
