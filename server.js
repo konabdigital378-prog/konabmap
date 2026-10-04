@@ -37,12 +37,13 @@ io.on('connection', (socket) => {
   socket.emit('bus-list', [...busActifs.values()]);
 
   socket.on('partage-position', (data) => {
-    // data: { pseudo, ligne, lat, lng, vitesse }
+    // data: { pseudo, ligne, ville, lat, lng, vitesse }
     if (typeof data.lat !== 'number' || typeof data.lng !== 'number') return;
     busActifs.set(socket.id, {
       id: socket.id,
       pseudo: String((data.pseudo || 'Étudiant')).slice(0, 30),
       ligne: String((data.ligne || 'L1')).slice(0, 10),
+      ville: String((data.ville || 'Ouagadougou')).slice(0, 30),
       lat: data.lat,
       lng: data.lng,
       vitesse: data.vitesse || 0,

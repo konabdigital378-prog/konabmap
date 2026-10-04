@@ -129,6 +129,85 @@ const LIGNES = {
   ]},
 };
 
+// ===== VILLES + UNIVERSITÉS (la plateforme gère le reste) =====
+const VILLES = {
+  "Ouagadougou": { centre: [12.3714, -1.5197], zoom: 12, universites: [
+    { nom: "Université Joseph Ki-Zerbo (UJKZ)", lat: 12.382, lng: -1.503 },
+    { nom: "Université Thomas Sankara (UTS)", lat: 12.345, lng: -1.390 },
+    { nom: "Université Saint-Thomas d'Aquin (USTA)", lat: 12.360, lng: -1.480 },
+  ]},
+  "Bobo-Dioulasso": { centre: [11.178, -4.291], zoom: 12, universites: [
+    { nom: "Université Nazi Boni (UNB)", lat: 11.190, lng: -4.280 },
+    { nom: "INSSA Bobo", lat: 11.180, lng: -4.290 },
+    { nom: "UCAO Bobo", lat: 11.175, lng: -4.295 },
+  ]},
+  "Koudougou": { centre: [12.253, -2.362], zoom: 13, universites: [
+    { nom: "Université Norbert Zongo (UNZ)", lat: 12.250, lng: -2.360 },
+  ]},
+  "Ouahigouya": { centre: [13.582, -2.421], zoom: 13, universites: [
+    { nom: "Université de Ouahigouya", lat: 13.580, lng: -2.420 },
+    { nom: "ENEP Ouahigouya", lat: 13.585, lng: -2.425 },
+  ]},
+  "Dédougou": { centre: [12.466, -3.459], zoom: 13, universites: [
+    { nom: "Université de Dédougou", lat: 12.466, lng: -3.459 },
+    { nom: "ENEP Dédougou", lat: 12.470, lng: -3.455 },
+  ]},
+};
+for (const l of Object.values(LIGNES)) if (!l.ville) l.ville = "Ouagadougou";
+
+Object.assign(LIGNES, {
+  B1: { ville: "Bobo-Dioulasso", nom: "B1 - Belleville ↔ Tiéfo Amoro", couleur: "#009639", detail: "Cité univ Belleville (CROUB) - Lycée national - BCEAO - CHU Souro Sanou - Tiéfo Amoro", arrets: [
+    { nom: "Cité Univ Belleville (CROUB)", lat: 11.200, lng: -4.270 },
+    { nom: "Lycée national", lat: 11.190, lng: -4.280 },
+    { nom: "BCEAO", lat: 11.182, lng: -4.288 },
+    { nom: "CHU Souro Sanou", lat: 11.180, lng: -4.290 },
+    { nom: "Place Tiéfo Amoro", lat: 11.178, lng: -4.291 },
+  ]},
+  B5: { ville: "Bobo-Dioulasso", nom: "B5 - Farako Ba ↔ Tiéfo Amoro", couleur: "#EF2D2D", detail: "Farako Ba - Matourkou - Av Sangoulé Lamizana - Nation - Tiéfo Amoro", arrets: [
+    { nom: "Farako Ba", lat: 11.150, lng: -4.310 },
+    { nom: "Matourkou", lat: 11.160, lng: -4.300 },
+    { nom: "Rond-point Nation", lat: 11.175, lng: -4.292 },
+    { nom: "LONAB", lat: 11.177, lng: -4.291 },
+    { nom: "Place Tiéfo Amoro", lat: 11.178, lng: -4.291 },
+  ]},
+  B8: { ville: "Bobo-Dioulasso", nom: "B8 - Djoulankolo ↔ Tiéfo Amoro", couleur: "#0066cc", detail: "Djoulankolo - ENEP - Maison culture - Nation - Tiéfo Amoro", arrets: [
+    { nom: "Djoulankolo", lat: 11.195, lng: -4.310 },
+    { nom: "ENEP Bobo", lat: 11.185, lng: -4.300 },
+    { nom: "Maison de la culture", lat: 11.180, lng: -4.295 },
+    { nom: "Place Tiéfo Amoro", lat: 11.178, lng: -4.291 },
+  ]},
+  BUNB: { ville: "Bobo-Dioulasso", nom: "Spéciale UNB - Total ↔ Nazi Boni Nasso", couleur: "#FEDD00", detail: "Station Total - Place femme - Amphi 22 - Cité univ - Université Nazi Boni Nasso", arrets: [
+    { nom: "Station Total route Ouaga", lat: 11.185, lng: -4.275 },
+    { nom: "Place de la femme", lat: 11.180, lng: -4.285 },
+    { nom: "Amphi du 22", lat: 11.185, lng: -4.290 },
+    { nom: "Université Nazi Boni Nasso", lat: 11.190, lng: -4.280 },
+  ]},
+  K1: { ville: "Koudougou", nom: "K1 - Forces vives ↔ Univ Norbert Zongo", couleur: "#009639", detail: "Cité forces vives - Gouvernorat - Mairie - Univ Norbert Zongo", arrets: [
+    { nom: "Cité forces vives", lat: 12.260, lng: -2.370 },
+    { nom: "Mairie Koudougou", lat: 12.253, lng: -2.362 },
+    { nom: "Terminus central", lat: 12.252, lng: -2.361 },
+    { nom: "Université Norbert Zongo", lat: 12.250, lng: -2.360 },
+  ]},
+  K3: { ville: "Koudougou", nom: "K3 - Goundi ↔ Gare routière", couleur: "#EF2D2D", detail: "Goundi - Univ Koudougou - Terminus central - Gare routière", arrets: [
+    { nom: "Goundi", lat: 12.245, lng: -2.375 },
+    { nom: "Université Koudougou", lat: 12.250, lng: -2.360 },
+    { nom: "Terminus central", lat: 12.252, lng: -2.361 },
+    { nom: "Gare routière Koudougou", lat: 12.256, lng: -2.365 },
+  ]},
+  OLSE1: { ville: "Ouahigouya", nom: "Spéciale Univ ↔ Nation", couleur: "#009639", detail: "Université Ouahigouya - Gare routière - Cathédrale - Place Nation", arrets: [
+    { nom: "Université de Ouahigouya", lat: 13.580, lng: -2.420 },
+    { nom: "Gare routière", lat: 13.581, lng: -2.421 },
+    { nom: "Cathédrale", lat: 13.582, lng: -2.422 },
+    { nom: "Place de la Nation", lat: 13.584, lng: -2.424 },
+  ]},
+  DLSE1: { ville: "Dédougou", nom: "Spéciale Univ ↔ Nazi Boni", couleur: "#009639", detail: "Université Dédougou - ONEA - Gouvernorat - Rond-point Nazi Boni", arrets: [
+    { nom: "Université de Dédougou", lat: 12.466, lng: -3.459 },
+    { nom: "ONEA Dédougou", lat: 12.468, lng: -3.457 },
+    { nom: "Gouvernorat", lat: 12.470, lng: -3.455 },
+    { nom: "Rond-point Nazi Boni", lat: 12.472, lng: -3.453 },
+  ]},
+});
+
 const socket = io();
 let map, userMarker, userPos = null;
 let busMarkers = {};
@@ -139,42 +218,100 @@ let alerteDejaJouee = {};
 
 map = L.map('map').setView([12.3714, -1.5197], 12);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+let lignesLayer = L.layerGroup().addTo(map);
 
-// Dessiner lignes + arrêts
-for (const [code, l] of Object.entries(LIGNES)) {
-  const latlngs = l.arrets.map(a => [a.lat, a.lng]);
-  L.polyline(latlngs, { color: l.couleur, weight: 4, opacity: 0.7 }).addTo(map);
-  l.arrets.forEach(a => {
-    L.circleMarker([a.lat, a.lng], { radius: 7, color: "#000", fillColor: "#fff", fillOpacity: 1, weight: 2 })
-      .bindPopup(`<b>${a.nom}</b><br>${l.nom}`).addTo(map);
+function lignesDeVille(ville) {
+  return Object.entries(LIGNES).filter(([_, l]) => (l.ville || "Ouagadougou") === ville);
+}
+
+// Dessiner lignes + arrêts d'une ville (+ marqueurs universités)
+function afficherVille(ville) {
+  lignesLayer.clearLayers();
+  const v = VILLES[ville] || VILLES["Ouagadougou"];
+  map.setView(v.centre, v.zoom);
+  for (const [code, l] of lignesDeVille(ville)) {
+    const latlngs = l.arrets.map(a => [a.lat, a.lng]);
+    L.polyline(latlngs, { color: l.couleur, weight: 4, opacity: 0.7 }).addTo(lignesLayer);
+    l.arrets.forEach(a => {
+      L.circleMarker([a.lat, a.lng], { radius: 7, color: "#000", fillColor: "#fff", fillOpacity: 1, weight: 2 })
+        .bindPopup(`<b>${a.nom}</b><br>${l.nom}`).addTo(lignesLayer);
+    });
+  }
+  v.universites.forEach(u => {
+    L.marker([u.lat, u.lng]).bindPopup(`🎓 <b>${u.nom}</b>`).addTo(lignesLayer);
   });
+  document.querySelector(".subtitle").textContent = `SOTRACO • ${ville} • Pour étudiants`;
 }
 
-// Remplir selects
-function tousArrets() {
-  const s = new Map();
-  for (const l of Object.values(LIGNES)) for (const a of l.arrets) s.set(a.nom, a);
-  return [...s.entries()];
-}
-const arretsUniques = tousArrets();
-for (const selId of ["mon-arret", "depart", "arrivee"]) {
-  const sel = document.getElementById(selId);
-  arretsUniques.forEach(([nom]) => {
-    const o = document.createElement("option"); o.value = nom; o.textContent = nom; sel.appendChild(o);
+// Remplir selects selon ville
+function remplirSelectsVille(ville) {
+  const selLigne = document.getElementById("ligne");
+  selLigne.innerHTML = "";
+  lignesDeVille(ville).forEach(([code, l]) => {
+    const o = document.createElement("option"); o.value = code; o.textContent = `${code} - ${l.nom.replace(/^L\d+ - |^Spéciale |^Inter - /, "")}`;
+    o.textContent = code + " - " + l.nom.split(" - ").slice(1).join(" - ");
+    selLigne.appendChild(o);
   });
+  const arrets = new Map();
+  for (const [_, l] of lignesDeVille(ville)) for (const a of l.arrets) arrets.set(a.nom, a);
+  for (const selId of ["mon-arret", "depart", "arrivee"]) {
+    const sel = document.getElementById(selId);
+    sel.innerHTML = "";
+    arrets.forEach(([nom]) => {
+      const o = document.createElement("option"); o.value = nom; o.textContent = nom; sel.appendChild(o);
+    });
+  }
+  const v = VILLES[ville];
+  if (v && v.universites.length) {
+    document.getElementById("depart").value = v.universites[0].nom && [...arrets.keys()].find(n => n.includes("Universit")) || [...arrets.keys()][0];
+  }
+  document.getElementById("lignes-info").innerHTML = lignesDeVille(ville).map(([c, l]) =>
+    `<details><summary><b>${c}</b> - ${l.nom}</summary><p><small>🛣️ ${l.detail || ""}</small></p><ul>${l.arrets.map(a => `<li>${a.nom}</li>`).join("")}</ul><small>Source: sotraco.bf • 6h00-20h00 • ~200F</small></details>`).join("");
 }
-document.getElementById("depart").value = "Université UJKZ";
-document.getElementById("arrivee").value = "Gare Gounghin";
 
-// Profil
+function getVille() { return document.getElementById("ville")?.value || localStorage.getItem("ville") || "Ouagadougou"; }
+function getUniv() { return document.getElementById("universite")?.value || localStorage.getItem("universite") || ""; }
+
+// Profil + connexion ville/université
 const pseudoInput = document.getElementById("pseudo");
 pseudoInput.value = localStorage.getItem("pseudo") || "";
+const villeSel = document.getElementById("ville");
+Object.keys(VILLES).forEach(v => {
+  const o = document.createElement("option"); o.value = v; o.textContent = v; villeSel.appendChild(o);
+});
+villeSel.value = localStorage.getItem("ville") || "Ouagadougou";
+function remplirUniversites() {
+  const uSel = document.getElementById("universite");
+  uSel.innerHTML = "";
+  VILLES[villeSel.value].universites.forEach(u => {
+    const o = document.createElement("option"); o.value = u.nom; o.textContent = "🎓 " + u.nom; uSel.appendChild(o);
+  });
+  if (localStorage.getItem("universite")) uSel.value = localStorage.getItem("universite");
+}
+remplirUniversites();
+villeSel.onchange = () => {
+  remplirUniversites();
+  afficherVille(villeSel.value);
+  remplirSelectsVille(villeSel.value);
+  document.getElementById("btn-demo").textContent = `▶️ Démo sans GPS (simuler un bus à ${villeSel.value})`;
+};
 document.getElementById("save-profil").onclick = () => {
   localStorage.setItem("pseudo", pseudoInput.value || "Étudiant");
+  localStorage.setItem("ville", villeSel.value);
+  localStorage.setItem("universite", document.getElementById("universite").value);
   localStorage.setItem("mon-arret", document.getElementById("mon-arret").value);
-  alert("Enregistré ✅ : " + (pseudoInput.value || "Étudiant"));
+  afficherVille(villeSel.value);
+  remplirSelectsVille(villeSel.value);
+  alert(`Connecté ✅ : ${pseudoInput.value || "Étudiant"} • ${villeSel.value} • ${document.getElementById("universite").value}`);
 };
-if (localStorage.getItem("mon-arret")) document.getElementById("mon-arret").value = localStorage.getItem("mon-arret");
+afficherVille(villeSel.value);
+remplirSelectsVille(villeSel.value);
+document.getElementById("btn-demo").textContent = `▶️ Démo sans GPS (simuler un bus à ${villeSel.value})`;
+if (localStorage.getItem("mon-arret")) {
+  const m = localStorage.getItem("mon-arret");
+  if ([...document.getElementById("mon-arret").options].some(o => o.value === m))
+    document.getElementById("mon-arret").value = m;
+}
 
 function getPseudo() { return pseudoInput.value.trim() || localStorage.getItem("pseudo") || "Étudiant"; }
 
@@ -207,7 +344,7 @@ btnDansBus.onclick = () => {
     statut.style.color = "green";
     watchId = navigator.geolocation.watchPosition(pos => {
       socket.emit("partage-position", {
-        pseudo: getPseudo(), ligne,
+        pseudo: getPseudo(), ligne, ville: getVille(),
         lat: pos.coords.latitude, lng: pos.coords.longitude,
         vitesse: pos.coords.speed || 0
       });
@@ -233,13 +370,13 @@ document.getElementById("btn-demo").onclick = () => {
   let i = 0, t = 0;
   partageActif = true;
   btnDansBus.classList.add("hidden"); btnStop.classList.remove("hidden");
-  statut.textContent = "🧪 DÉMO : tu simules un bus " + ligne + " à Ouaga";
+  statut.textContent = "🧪 DÉMO : tu simules un bus " + ligne + " à " + getVille();
   demoInterval = setInterval(() => {
     const a = arrets[i % arrets.length], b = arrets[(i + 1) % arrets.length];
     t += 0.2; if (t >= 1) { t = 0; i++; }
     const lat = a.lat + (b.lat - a.lat) * t;
     const lng = a.lng + (b.lng - a.lng) * t;
-    socket.emit("partage-position", { pseudo: getPseudo() + " (démo)", ligne, lat, lng, vitesse: 8 });
+    socket.emit("partage-position", { pseudo: getPseudo() + " (démo)", ligne, ville: getVille(), lat, lng, vitesse: 8 });
   }, 2000);
 };
 
@@ -250,8 +387,11 @@ function distanceM(lat1, lon1, lat2, lon2) {
   return 2 * R * Math.asin(Math.sqrt(a));
 }
 
-socket.on("bus-list", (bus) => {
-  document.getElementById("online-count").textContent = bus.length + " bus en ligne";
+socket.on("bus-list", (allBus) => {
+  // La plateforme ne montre que les bus de TA ville
+  const ville = getVille();
+  const bus = allBus.filter(b => !b.ville || b.ville === ville);
+  document.getElementById("online-count").textContent = bus.length + " bus en ligne à " + ville;
   // nettoyer anciens markers
   const ids = new Set(bus.map(b => b.id));
   for (const id of Object.keys(busMarkers)) if (!ids.has(id)) { map.removeLayer(busMarkers[id]); delete busMarkers[id]; }
@@ -296,18 +436,19 @@ if (Notification && Notification.permission === "default") Notification.requestP
 document.getElementById("btn-itineraire").onclick = () => {
   const dep = document.getElementById("depart").value, arr = document.getElementById("arrivee").value;
   const res = document.getElementById("resultat-itineraire");
-  const lignesDirectes = Object.entries(LIGNES).filter(([_, l]) =>
+  const ville = getVille();
+  const lignesVille = Object.entries(LIGNES).filter(([_, l]) => (l.ville || "Ouagadougou") === ville);
+  const lignesDirectes = lignesVille.filter(([_, l]) =>
     l.arrets.some(a => a.nom === dep) && l.arrets.some(a => a.nom === arr));
   if (lignesDirectes.length) {
     res.innerHTML = lignesDirectes.map(([c, l]) =>
       `<p>✅ Prends <b>${c}</b> : ${l.nom}<br><small>${dep} → ${arr} direct, sans correspondance</small></p>`).join("");
   } else {
-    const lDep = Object.entries(LIGNES).filter(([_, l]) => l.arrets.some(a => a.nom === dep));
-    const lArr = Object.entries(LIGNES).filter(([_, l]) => l.arrets.some(a => a.nom === arr));
-    res.innerHTML = `<p>⚠️ Pas de direct. Options :<br>Depuis <b>${dep}</b> : ${lDep.map(([c]) => c).join(", ") || "aucune"}<br>Jusqu'à <b>${arr}</b> : ${lArr.map(([c]) => c).join(", ") || "aucune"}<br><small>Descends à <b>Université UJKZ</b> pour correspondance (hub étudiant).</small></p>`;
+    const lDep = lignesVille.filter(([_, l]) => l.arrets.some(a => a.nom === dep));
+    const lArr = lignesVille.filter(([_, l]) => l.arrets.some(a => a.nom === arr));
+    const hub = getUniv() || "ton université";
+    res.innerHTML = `<p>⚠️ Pas de direct à ${ville}. Options :<br>Depuis <b>${dep}</b> : ${lDep.map(([c]) => c).join(", ") || "aucune"}<br>Jusqu'à <b>${arr}</b> : ${lArr.map(([c]) => c).join(", ") || "aucune"}<br><small>Correspondance conseillée à <b>${hub}</b>.</small></p>`;
   }
 };
 
-// ===== INFOS LIGNES (itinéraires officiels sotraco.bf) =====
-document.getElementById("lignes-info").innerHTML = Object.entries(LIGNES).map(([c, l]) =>
-  `<details><summary><b>${c}</b> - ${l.nom}</summary><p><small>🛣️ ${l.detail || ""}</small></p><ul>${l.arrets.map(a => `<li>${a.nom}</li>`).join("")}</ul><small>Source: sotraco.bf • Premier: 6h00 • Dernier: 20h00 • Ticket ~200F</small></details>`).join("");
+// Note: #lignes-info est rempli par remplirSelectsVille() selon la ville.

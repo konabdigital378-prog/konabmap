@@ -18,7 +18,7 @@
 <body>
 <header>
   <div class="logo"><img src="logo.png" alt="KonabMap" /> KonabMap</div>
-  <div class="subtitle">SOTRACO • Ouaga • Pour étudiants</div>
+  <div class="subtitle">SOTRACO • Choisis ta ville • Pour étudiants</div>
   <div id="online-count">0 bus en ligne</div>
 </header>
 
@@ -28,41 +28,26 @@
   <div id="map"></div>
 
   <aside id="panel">
-    <!-- INSCRIPTION -->
+    <!-- CONNEXION -->
     <section class="card">
-      <h2>👋 Bienvenue</h2>
+      <h2>👋 Connexion étudiant</h2>
       <label>Ton prénom / pseudo</label>
       <input id="pseudo" placeholder="Ex: Awa" />
+      <label>Ta ville</label>
+      <select id="ville"></select>
+      <label>Ton université</label>
+      <select id="universite"></select>
       <label>Tu es où ? (arrêt proche)</label>
       <select id="mon-arret"></select>
-      <button id="save-profil" class="btn primary">Enregistrer</button>
-      <p class="hint">Enregistré sur ton téléphone. Pas besoin de compte compliqué.</p>
+      <button id="save-profil" class="btn primary">Se connecter</button>
+      <p class="hint">La plateforme affiche ensuite uniquement les bus, lignes et arrêts de ta ville.</p>
     </section>
 
     <!-- MODE -->
     <section class="card highlight">
       <h2>📍 Où est le prochain bus ?</h2>
       <label>Ligne du bus</label>
-      <select id="ligne">
-        <option value="L1">L1 - Karpala ↔ Naba Koom</option>
-        <option value="L2">L2 - Yamtenga ↔ Naba Koom</option>
-        <option value="L3">L3 - Bissighin ↔ Zone écoles</option>
-        <option value="L4">L4 - Sandogo ↔ Zone écoles</option>
-        <option value="L5">L5 - Bargo/Saaba ↔ Naba Koom</option>
-        <option value="L6">L6 - Koulweoguin ↔ Naba Koom</option>
-        <option value="L9">L9 - Saaba ↔ Naba Koom</option>
-        <option value="L10">L10 - Tengandogo ↔ Zone écoles</option>
-        <option value="L11">L11 - Rimkiéta ↔ Naba Koom</option>
-        <option value="L12">L12 - Bonheur ville ↔ Zone écoles</option>
-        <option value="L13">L13 - Kamboinsin ↔ Zone écoles</option>
-        <option value="L15">L15 - Naba Koom ↔ Belle Ville</option>
-        <option value="L16">L16 - Bassinko ↔ Naba Koom</option>
-        <option value="L17">L17 - Boassa ↔ Zone écoles</option>
-        <option value="UO1A">Spéciale UO - Kossodo ↔ SIAO via UO</option>
-        <option value="UTS1">Spéciale UTS - UO1 ↔ Thomas Sankara</option>
-        <option value="KOUBRI">Inter - Ouaga ↔ Koubri</option>
-        <option value="ZINIARE">Inter - Ouaga ↔ Ziniaré</option>
-      </select>
+      <select id="ligne"></select>
 
       <div class="row">
         <button id="btn-dans-bus" class="btn share">🟢 Je suis DANS le bus<br><small>Partager ma position</small></button>
