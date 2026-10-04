@@ -1,5 +1,5 @@
 // Service Worker KonabMap - offline de base
-const CACHE = 'konabmap-v1';
+const CACHE = 'konabmap-v2';
 const ASSETS = ['/', '/index.html', '/style.css', '/app.js', '/manifest.json', '/logo.png'];
 
 self.addEventListener('install', (e) => {
@@ -7,7 +7,11 @@ self.addEventListener('install', (e) => {
 });
 
 self.addEventListener('activate', (e) => {
-  e.waitUntil(self.clients.claim());
+  // Supprime anciens caches pour forcer la nouvelle version
+  e.waitUntil(
+    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
+  );
 });
 
 self.addEventListener('fetch', (e) => {
