@@ -43,7 +43,7 @@ export async function adminStats() {  const [profils, bus] = await Promise.all([
   return { total: profils.count ?? (profils.data || []).length, parVille, bus: bus.data || [] };
 }
 
-export async function listUsers() {  const { data } = await supa.from('profils').select('pseudo,email,ville,universite,updated_at').order('updated_at', { ascending: false }).limit(100);
+export async function listUsers() {  const { data } = await supa.from('profils').select('pseudo,email,ville,universite,updated_at,demande_chauffeur,chauffeur_verifie').order('updated_at', { ascending: false }).limit(100);
   return data || [];
 }
 

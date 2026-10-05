@@ -3,14 +3,16 @@ import { LIGNES } from '../data.js';
 import { getFavs, prochainsDeparts, prochainsExacts, statutHoraire, typeJour, telechargerICS, toutesHeures } from '../lib.js';
 import { fetchHoraires, fetchDeparts, demanderVille, topDemandes, moyennesAvis, noterLigne } from '../supabase.js';
 
-export default function Lignes({ ville, onVoir, isPremium, goPremium }) {
+export default function Lignes({ ville, onVoir, isPremium, goPremium, bus }) {
   const [q, setQ] = useState('');
   const [favs, setFavs] = useState(getFavs());
   const [horaires, setHoraires] = useState({});
   const [departs, setDeparts] = useState({});
   const [demandes, setDemandes] = useState([]);
-  const [avis, setAvis] = useState({});
   const [nouvelleVille, setNouvelleVille] = useState('');
+  const [avis, setAvis] = useState({});
+  const enDirect = {};
+  (bus || []).forEach((b) => { enDirect[b.ligne] = (enDirect[b.ligne] || 0) + 1; });
   const [, tick] = useState(0);
 
   const chargerDemandes = () => topDemandes().then(setDemandes).catch(() => {});
@@ -70,6 +72,7 @@ export default function Lignes({ ville, onVoir, isPremium, goPremium }) {
               <details key={c}>
                 <summary>
                   <b>{c}</b> - {l.nom}{' '}
+                  {enDirect[c] > 0 && <span title="Bus en direct">🟢{enDirect[c]}</span>}{' '}
                   {aExacts && <span title="Horaires officiels">📋</span>}
                   <span className="fav" style={{ cursor: 'pointer' }} onClick={(e) => { e.preventDefault(); toggleFav(c); }}>
                     {favs.includes(c) ? '⭐' : '☆'}

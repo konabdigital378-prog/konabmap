@@ -121,6 +121,16 @@ export default function Admin({ ville }) {
     try {
       await api('/api/admin/promote', { method: 'POST', body: JSON.stringify({ pseudo }) });
       alert(`${pseudo} est admin 🛡️`);
+      charger();
+    } catch (e) { alert('Erreur : ' + (e.message || e)); }
+  };
+
+  const verifierChauffeur = async (pseudo) => {
+    if (!confirm(`Vérifier ${pseudo} comme chauffeur ?`)) return;
+    try {
+      await api('/api/admin/verifier-chauffeur', { method: 'POST', body: JSON.stringify({ pseudo }) });
+      alert(`${pseudo} vérifié ✔️🚍`);
+      charger();
     } catch (e) { alert('Erreur : ' + (e.message || e)); }
   };
 
@@ -371,10 +381,14 @@ export default function Admin({ ville }) {
             <p className="hint">👥 {usersFiltres.length} étudiant(s)</p>
             {usersFiltres.map((u) => (
               <div key={u.pseudo} className="bus-item">
-                <b>{u.pseudo}</b> <small>{u.email || ''}</small><br />
+                <b>{u.pseudo}</b> <small>{u.email || ''}</small>
+                {u.chauffeur_verifie ? ' ✔️🚍' : u.demande_chauffeur ? ' 🚍 demande' : ''}<br />
                 <small>{u.ville || ''} • {u.universite || ''}</small>
                 <div className="row" style={{ marginTop: 6 }}>
                   <button className="btn secondary" style={{ marginTop: 0 }} onClick={() => promouvoir(u.pseudo)}>🛡️ Admin</button>
+                  {u.demande_chauffeur && !u.chauffeur_verifie && (
+                    <button className="btn primary" style={{ marginTop: 0 }} onClick={() => verifierChauffeur(u.pseudo)}>✔️ Chauffeur</button>
+                  )}
                   <button className="btn secondary" style={{ marginTop: 0 }} onClick={() => supprimer(u.pseudo)}>Suppr</button>
                 </div>
               </div>

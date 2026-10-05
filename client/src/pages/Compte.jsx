@@ -159,6 +159,15 @@ export default function Compte({ session, onSession, isPremium, goPremium }) {
           </select>
           <button className="btn primary" onClick={sauverProfil}>Se connecter</button>
           <p className="hint">La plateforme affiche ensuite uniquement les bus, lignes et arrêts de ta ville.</p>
+          <button className="btn secondary" onClick={async () => {
+            try {
+              const { data: { user } } = await supa.auth.getUser();
+              if (!user) return alert('Connecte-toi (compte) d’abord');
+              const { error } = await supa.from('profils').update({ demande_chauffeur: true }).eq('user_id', user.id);
+              if (error) throw error;
+              alert('Demande envoyée 🚍 L’admin vérifiera ton statut chauffeur.');
+            } catch (e) { alert(e.message); }
+          }}>🚍 Je suis chauffeur SOTRACO : demander le badge vérifié</button>
         </section>
       )}
 

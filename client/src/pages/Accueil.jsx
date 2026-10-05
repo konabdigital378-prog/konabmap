@@ -19,6 +19,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
   const [favsOnly, setFavsOnly] = useState(false);
   const [alertesFavs, setAlertesFavs] = useState(false);
   const [filtre, setFiltre] = useState('toutes');
+  const [tri, setTri] = useState('distance');
   const [recherche, setRecherche] = useState('');
   const [alertSonore, setAlertSonore] = useState(true);
   const [voix, setVoix] = useState(() => localStorage.getItem('voix') === 'oui');
@@ -163,7 +164,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
         html: `<div class="bus-pin${frais ? ' live' : ''}" style="--c:${couleur}"><span>🚌</span><b>${esc(b.ligne)}</b><i style="background:${affColor}"></i></div>`,
         iconSize: [78, 34], iconAnchor: [39, 17],
       });
-      const popup = `<div class="bus-pop"><b>🚌 Bus ${esc(b.ligne)}</b><br>Par ${esc(b.pseudo)}${b.destination ? `<br>↓ ${esc(b.destination)}` : ''}${b.signalements > 0 ? `<br>⚠️ ${b.signalements} signalement(s)` : ''}</div>`;
+      const popup = `<div class="bus-pop"><b>🚌 Bus ${esc(b.ligne)}</b>${b.chauffeur ? ' ✔️🚍' : ''}<br>Par ${esc(b.pseudo)}${b.destination ? `<br>↓ ${esc(b.destination)}` : ''}${b.signalements > 0 ? `<br>⚠️ ${b.signalements} signalement(s)` : ''}</div>`;
       if (!busMarkers.current[b.id]) {
         busMarkers.current[b.id] = L.marker([b.lat, b.lng], { icon }).addTo(map).bindPopup(popup);
       } else {
@@ -240,8 +241,15 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bus]);
 
-  let visibles = favsOnly ? bus.filter((b) => getFavs().includes(b.ligne)) : bus;
+  let visibles = favsOnly ? bus.filter((b) => getFavs().includes(b.ligne)) : [...bus];
   if (filtre !== 'toutes') visibles = visibles.filter((b) => b.ligne === filtre);
+  if (userPos && tri === 'distance') {
+    visibles = [...visibles].sort((a, b2) => distanceM(userPos.lat, userPos.lng, a.lat, a.lng) - distanceM(userPos.lat, userPos.lng, b2.lat, b2.lng));
+  } else if (tri === 'recent') {
+    visibles = [...visibles].sort((a, b2) => (b2.updatedAt || 0) - (a.updatedAt || 0));
+  } else if (tri === 'ligne') {
+    visibles = [...visibles].sort((a, b2) => String(a.ligne).localeCompare(String(b2.ligne)));
+  }
 
   const voir = (b) => mapObj.current.setView([b.lat, b.lng], 15);
   const meLocaliser = () => { if (userPos) mapObj.current.setView([userPos.lat, userPos.lng], 15); };
@@ -399,6 +407,13 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
           ))}
         </div>
         <label><input type="checkbox" checked={favsOnly} onChange={(e) => setFavsOnly(e.target.checked)} /> ⭐ Mes lignes favorites seulement</label>
+        <div className="row">
+          <select value={tri} onChange={(e) => setTri(e.target.value)} aria-label="Trier">
+            <option value="distance">📏 Plus proches</option>
+            <option value="recent">🕒 Récents</option>
+            <option value="ligne">🚌 Par ligne</option>
+          </select>
+        </div>
         <div id="liste-bus">
           {visibles.length === 0 && <p className="hint">Aucun bus partagé pour l'instant. Monte dans un bus et partage !</p>}
           {visibles.length === 0 && (() => {
@@ -422,7 +437,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
             return (
               <div key={b.id} className={'bus-item' + (proche ? ' proche' : '')}>
                 <span style={{ display: 'inline-block', width: 12, height: 12, borderRadius: '50%', background: LIGNES[b.ligne]?.couleur || '#009639', marginRight: 6 }}></span>
-                <b>🚌 {b.ligne}</b> par {b.pseudo}
+                <b>🚌 {b.ligne}</b> par {b.pseudo}{b.chauffeur ? ' ✔️🚍' : ''}
                 {b.signalements > 0 && <span style={{ color: '#c11f1f', fontWeight: 800 }}> • ⚠️ x{b.signalements}</span>}<br />
                 📏 {d === null ? '—' : formatDist(d)} • ⏱️ {d === null ? '—' : formatEta(d)}
                 {b.vitesse > 1 ? ` • ${Math.round(b.vitesse * 3.6)} km/h` : ''}

@@ -232,14 +232,25 @@ app.post('/api/admin/codes', async (req, res) => {
     res.json({ codes });
   } catch (e) { res.status(e.status || 500).json({ message: e.message }); }
 });
-
-app.post('/api/admin/promote', async (req, res) => {  try {
+app.post('/api/admin/promote', async (req, res) => {
+  try {
     await requireAdmin(req);
     const pseudo = String((req.body || {}).pseudo || '').trim();
     if (!pseudo) throw new Error('Pseudo requis');
     const { data } = await supaAdmin.from('profils').select('user_id').eq('pseudo', pseudo).limit(1);
     if (!data?.[0]?.user_id) throw new Error('Étudiant introuvable');
     const { error } = await supaAdmin.from('admins').upsert({ user_id: data[0].user_id });
+    if (error) throw error;
+    res.json({ ok: true });
+  } catch (e) { res.status(e.status || 500).json({ message: e.message }); }
+});
+
+app.post('/api/admin/verifier-chauffeur', async (req, res) => {
+  try {
+    await requireAdmin(req);
+    const pseudo = String((req.body || {}).pseudo || '').trim();
+    if (!pseudo) throw new Error('Pseudo requis');
+    const { error } = await supaAdmin.from('profils').update({ chauffeur_verifie: true, demande_chauffeur: false }).eq('pseudo', pseudo);
     if (error) throw error;
     res.json({ ok: true });
   } catch (e) { res.status(e.status || 500).json({ message: e.message }); }
@@ -313,8 +324,11 @@ app.get('*', (req, res, next) => {
   next();
 });
 
-// busActifs : socketId -> { pseudo, ligne, lat, lng, vitesse, cap, updatedAt }
+// busActifs : socketId -> { pseudo, ligne, ... }
 const busActifs = new Map();
+// Cache badge chauffeur (pseudo -> bool), 5 min
+const cacheChauffeurs = new Map();
+const cacheT = {};
 
 function nettoyage() {
   const now = Date.now();
@@ -324,15 +338,20 @@ function nettoyage() {
     }
   }
 }
+// Bus diffusés (abus masqués : 5+ signalements)
+function listeBus() {
+  return [...busActifs.values()].filter((b) => (b.signalements || 0) < 5);
+}
+
 setInterval(() => {
   nettoyage();
-  io.emit('bus-list', [...busActifs.values()]);
+  io.emit('bus-list', listeBus());
 }, 3000);
 
 io.on('connection', (socket) => {
   console.log('connecté:', socket.id);
   // envoyer liste immédiate
-  socket.emit('bus-list', [...busActifs.values()]);
+  socket.emit('bus-list', listeBus());
 
   socket.on('partage-position', (data) => {
     // data: { pseudo, ligne, ville, affluence, destination, lat, lng, vitesse }
@@ -342,19 +361,37 @@ io.on('connection', (socket) => {
     if (now - (socket.data.dernierPartage || 0) < 1500) return; // anti-flood
     socket.data.dernierPartage = now;
     const prev = busActifs.get(socket.id);
+    const pseudo = String((data.pseudo || 'Étudiant')).slice(0, 30);
     busActifs.set(socket.id, {
       id: socket.id,
-      pseudo: String((data.pseudo || 'Étudiant')).slice(0, 30),
+      pseudo,
       ligne: String((data.ligne || 'L1')).slice(0, 10),
       ville: String((data.ville || 'Ouagadougou')).slice(0, 30),
       affluence: ['places', 'debout', 'plein'].includes(data.affluence) ? data.affluence : 'places',
       destination: String((data.destination || '')).slice(0, 60),
       signalements: prev?.signalements || 0,
+      chauffeur: prev?.chauffeur ?? null,
       lat: data.lat,
       lng: data.lng,
       vitesse: data.vitesse || 0,
       updatedAt: Date.now()
     });
+    // Badge chauffeur vérifié (vérifié en base, cache 5 min)
+    const cache = cacheChauffeurs.get(pseudo);
+    if (cache === undefined || Date.now() - (cacheT[pseudo] || 0) > 300000) {
+      if (supaAdmin) supaAdmin.from('profils').select('chauffeur_verifie').eq('pseudo', pseudo).limit(1)
+        .then(({ data }) => {
+          const v = !!data?.[0]?.chauffeur_verifie;
+          cacheChauffeurs.set(pseudo, v);
+          cacheT[pseudo] = Date.now();
+          const b = busActifs.get(socket.id);
+          if (b) b.chauffeur = v;
+        }).catch(() => {});
+      else cacheChauffeurs.set(pseudo, false);
+    } else {
+      const b = busActifs.get(socket.id);
+      if (b) b.chauffeur = cache;
+    }
   });
 
   socket.on('signalement', ({ busId }) => {
@@ -365,13 +402,13 @@ io.on('connection', (socket) => {
     const b = busActifs.get(busId);
     if (b) {
       b.signalements = (b.signalements || 0) + 1;
-      io.emit('bus-list', [...busActifs.values()]);
+      io.emit('bus-list', listeBus());
     }
   });
 
   socket.on('stop-partage', () => {
     busActifs.delete(socket.id);
-    io.emit('bus-list', [...busActifs.values()]);
+    io.emit('bus-list', listeBus());
   });
 
   socket.on('disconnect', () => {
@@ -389,3 +426,4 @@ if (!process.env.VERCEL) {
 
 module.exports = app;
 module.exports.server = server;
+
