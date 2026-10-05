@@ -3,7 +3,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { LIGNES, VILLES } from '../data.js';
 import { socket } from '../socket.js';
-import { distanceM, formatDist, formatEta, getFavs, AFFL, prochainsDeparts, prochainsExacts, esc, parler, estHeurePointe } from '../lib.js';
+import { distanceM, formatDist, formatEta, formatEtaVitesse, getFavs, AFFL, prochainsDeparts, prochainsExacts, esc, parler, estHeurePointe } from '../lib.js';
 import { shareBusPosition, notify, fetchHoraires, fetchDeparts } from '../supabase.js';
 
 export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocus, isPremium, goPremium, suiviId, clearSuivi }) {
@@ -15,6 +15,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
   const [ligne, setLigne] = useState('');
   const [affluence, setAffluence] = useState('places');
   const [destination, setDestination] = useState('');
+  const [jeSuisChauffeur, setJeSuisChauffeur] = useState(false);
   const [partage, setPartage] = useState(false);
   const [favsOnly, setFavsOnly] = useState(false);
   const [alertesFavs, setAlertesFavs] = useState(false);
@@ -44,8 +45,9 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ville]);
   const tileRef = useRef(null);
-  const [fond, setFond] = useState(() => localStorage.getItem('fond') || 'clair');
+  const [fond, setFond] = useState(() => localStorage.getItem('fond') || (document.documentElement.dataset.theme === 'dark' ? 'sombre' : 'clair'));
   const [grandeCarte, setGrandeCarte] = useState(false);
+  const [suiviGPS, setSuiviGPS] = useState(true);
 
   const FONDS = {
     clair: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -164,7 +166,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
         html: `<div class="bus-pin${frais ? ' live' : ''}" style="--c:${couleur}"><span>🚌</span><b>${esc(b.ligne)}</b><i style="background:${affColor}"></i></div>`,
         iconSize: [78, 34], iconAnchor: [39, 17],
       });
-      const popup = `<div class="bus-pop"><b>🚌 Bus ${esc(b.ligne)}</b>${b.chauffeur ? ' ✔️🚍' : ''}<br>Par ${esc(b.pseudo)}${b.destination ? `<br>↓ ${esc(b.destination)}` : ''}${b.signalements > 0 ? `<br>⚠️ ${b.signalements} signalement(s)` : ''}</div>`;
+      const popup = `<div class="bus-pop"><b>🚌 Bus ${esc(b.ligne)}</b>${b.chauffeur ? ' ✔️🚍' : b.chauffeur_self ? ' 🚍' : ''}<br>Par ${esc(b.pseudo)}${b.destination ? `<br>↓ ${esc(b.destination)}` : ''}${b.signalements > 0 ? `<br>⚠️ ${b.signalements} signalement(s)` : ''}</div>`;
       if (!busMarkers.current[b.id]) {
         busMarkers.current[b.id] = L.marker([b.lat, b.lng], { icon }).addTo(map).bindPopup(popup);
       } else {
@@ -192,6 +194,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
           (pos) => {
             const payload = {
               pseudo: pseudo(), ligne, ville, affluence, destination,
+              chauffeur_self: jeSuisChauffeur,
               lat: pos.coords.latitude, lng: pos.coords.longitude,
               vitesse: pos.coords.speed || 0,
             };
@@ -258,7 +261,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
   const arriveeSignalee = useRef(false);
   useEffect(() => {
     if (!suiviId) arriveeSignalee.current = false;
-    if (busSuivi && mapObj.current) mapObj.current.setView([busSuivi.lat, busSuivi.lng], 15);
+    if (busSuivi && mapObj.current && suiviGPS) mapObj.current.setView([busSuivi.lat, busSuivi.lng], 15);
     if (busSuivi && monArret && !arriveeSignalee.current) {
       const d = distanceM(busSuivi.lat, busSuivi.lng, monArret.lat, monArret.lng);
       if (d < 800) {
@@ -308,7 +311,10 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
       {suiviId && (
         <div className="cta-card">
           {busSuivi ? `👀 Tu suis le bus ${busSuivi.ligne} de ${busSuivi.pseudo}` : '👀 Suivi en cours... (le bus partagera bientôt sa position)'}
-          <button className="btn secondary" onClick={clearSuivi}>Arrêter le suivi</button>
+          <div className="row">
+            <button className="btn secondary" style={{ marginTop: 8 }} onClick={() => setSuiviGPS((s) => !s)}>{suiviGPS ? '⏸️ Pause suivi GPS' : '▶️ Reprendre suivi GPS'}</button>
+            <button className="btn secondary" style={{ marginTop: 8 }} onClick={() => { clearSuivi(); setSuiviGPS(true); }}>Arrêter le suivi</button>
+          </div>
         </div>
       )}
       <div className="hero">
@@ -385,6 +391,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
           <option value="">— Non précisé —</option>
           {(LIGNES[ligne]?.arrets || []).map((a) => <option key={a.nom} value={a.nom}>{a.nom}</option>)}
         </select>
+        <label><input type="checkbox" checked={jeSuisChauffeur} onChange={(e) => setJeSuisChauffeur(e.target.checked)} /> 🚍 Je suis le chauffeur de ce bus</label>
         <div className="row">
           {!partage ? (
             <button className="btn share" onClick={demarrer}>🟢 Je suis DANS le bus<br /><small>Partager ma position</small></button>
@@ -433,14 +440,15 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
             const proche = d !== null && d < 800;
             if (proche) alerter(b, formatDist(d));
             const age = b.updatedAt ? Math.max(0, Math.round((Date.now() - b.updatedAt) / 1000)) : null;
-            const etaArret = monArret ? formatEta(distanceM(b.lat, b.lng, monArret.lat, monArret.lng)) : null;
+            const etaArret = monArret ? formatEtaVitesse(distanceM(b.lat, b.lng, monArret.lat, monArret.lng), b.vitesse) : null;
+            const aArret = !b.vitesse || b.vitesse <= 1;
             return (
               <div key={b.id} className={'bus-item' + (proche ? ' proche' : '')}>
                 <span style={{ display: 'inline-block', width: 12, height: 12, borderRadius: '50%', background: LIGNES[b.ligne]?.couleur || '#009639', marginRight: 6 }}></span>
-                <b>🚌 {b.ligne}</b> par {b.pseudo}{b.chauffeur ? ' ✔️🚍' : ''}
+                <b>🚌 {b.ligne}</b> par {b.pseudo}{b.chauffeur ? ' ✔️🚍' : b.chauffeur_self ? ' 🚍' : ''}
                 {b.signalements > 0 && <span style={{ color: '#c11f1f', fontWeight: 800 }}> • ⚠️ x{b.signalements}</span>}<br />
-                📏 {d === null ? '—' : formatDist(d)} • ⏱️ {d === null ? '—' : formatEta(d)}
-                {b.vitesse > 1 ? ` • ${Math.round(b.vitesse * 3.6)} km/h` : ''}
+                📏 {d === null ? '—' : formatDist(d)} • ⏱️ {d === null ? '—' : formatEtaVitesse(d, b.vitesse)}
+                {aArret ? ' • 🅿️ à l’arrêt' : ` • ${Math.round(b.vitesse * 3.6)} km/h`}
                 {age !== null ? (age < 8 ? ' • 🟢 en direct' : ` • maj il y a ${age}s`) : ''}<br />
                 {etaArret && monArret && <span>🚏 Arrive à <b>{monArret.nom}</b> dans ~<b>{etaArret}</b><br /></span>}
                 <small>{AFFL[b.affluence] || ''}{b.destination ? ` • ↓ ${b.destination}` : ''}</small>

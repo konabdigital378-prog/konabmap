@@ -27,6 +27,13 @@ export function formatEta(m) {
   return minutes < 1 ? 'arrive !' : `~${minutes} min`;
 }
 
+// ETA avec vitesse réelle du bus quand elle est connue (m/s), sinon 20 km/h
+export function formatEtaVitesse(m, vitesseMS) {
+  const v = vitesseMS > 1 ? vitesseMS : 20 / 3.6;
+  const minutes = Math.round(m / v / 60);
+  return minutes < 1 ? 'arrive !' : `~${minutes} min`;
+}
+
 // Échappe le HTML (popups Leaflet = HTML brut, données d'autres utilisateurs)
 export function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

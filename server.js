@@ -372,6 +372,7 @@ io.on('connection', (socket) => {
       destination: String((data.destination || '')).slice(0, 60),
       signalements: prev?.signalements || 0,
       chauffeur: prev?.chauffeur ?? null,
+      chauffeur_self: data.chauffeur_self === true,
       lat: data.lat,
       lng: data.lng,
       vitesse: data.vitesse || 0,
