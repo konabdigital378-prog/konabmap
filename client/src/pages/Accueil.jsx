@@ -25,6 +25,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
   const watchId = useRef(null);
   const debutPartage = useRef(null);
   const dejaAlerte = useRef({});
+  const busConnus = useRef(new Set());
   const userMarker = useRef(null);
   const [horaires, setHoraires] = useState({});
   const [departs, setDeparts] = useState({});
@@ -213,9 +214,28 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
     setPartage(false);
   };
 
-  useEffect(() => () => {
-    if (watchId.current) navigator.geolocation.clearWatch(watchId.current);
-  }, []);
+  // Alerte quand une ligne favorite passe en direct + stop auto à la fermeture
+  useEffect(() => {
+    const favs = getFavs();
+    bus.forEach((b) => {
+      if (!busConnus.current.has(b.id)) {
+        busConnus.current.add(b.id);
+        const frais = b.updatedAt && Date.now() - b.updatedAt < 90000;
+        if (frais && favs.includes(b.ligne)) {
+          notify(`Ta ligne ${b.ligne} est en direct !`, `${b.pseudo} partage sa position 🚌`).catch(() => {});
+          parler(`Ta ligne ${b.ligne} est en direct !`);
+        }
+      }
+    });
+    if (busConnus.current.size > 200) busConnus.current = new Set([...busConnus.current].slice(-100));
+    const stop = () => { if (watchId.current) socket.emit('stop-partage'); };
+    window.addEventListener('beforeunload', stop);
+    return () => {
+      window.removeEventListener('beforeunload', stop);
+      if (watchId.current) { navigator.geolocation.clearWatch(watchId.current); socket.emit('stop-partage'); }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bus]);
 
   let visibles = favsOnly ? bus.filter((b) => getFavs().includes(b.ligne)) : bus;
   if (filtre !== 'toutes') visibles = visibles.filter((b) => b.ligne === filtre);

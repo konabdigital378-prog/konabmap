@@ -7,6 +7,11 @@
   "background_color": "#FFF9EC",
   "theme_color": "#009639",
   "lang": "fr",
+  "shortcuts": [
+    { "name": "Où est mon bus ?", "url": "/#/accueil", "icons": [{ "src": "logo.png", "sizes": "192x192" }] },
+    { "name": "Quel bus prendre ?", "url": "/#/trajet", "icons": [{ "src": "logo.png", "sizes": "192x192" }] },
+    { "name": "Pass Premium", "url": "/#/premium", "icons": [{ "src": "logo.png", "sizes": "192x192" }] }
+  ],
   "icons": [
     {
       "src": "logo.png",

@@ -15,10 +15,20 @@ export default function Trajet({ ville, onVoir }) {
     if (directes.length > 0) {
       setRes({ directes });
     } else {
-      setRes({
-        lDep: lignesVille.filter(([, l]) => l.arrets.some((a) => a.nom === dep)).map(([c]) => c),
-        lArr: lignesVille.filter(([, l]) => l.arrets.some((a) => a.nom === arr)).map(([c]) => c),
-      });
+      const lDep = lignesVille.filter(([, l]) => l.arrets.some((a) => a.nom === dep));
+      const lArr = lignesVille.filter(([, l]) => l.arrets.some((a) => a.nom === arr));
+      // Correspondances à 1 transfert : arrêt commun entre une ligne de départ et une d'arrivée
+      const correspondances = [];
+      for (const [c1, l1] of lDep) {
+        for (const [c2, l2] of lArr) {
+          if (c1 === c2) continue;
+          const hub = l1.arrets.map((a) => a.nom).find((n) => l2.arrets.some((a) => a.nom === n));
+          if (hub) correspondances.push({ c1, c2, hub });
+          if (correspondances.length >= 3) break;
+        }
+        if (correspondances.length >= 3) break;
+      }
+      setRes({ lDep: lDep.map(([c]) => c), lArr: lArr.map(([c]) => c), correspondances });
     }
   };
 
@@ -41,6 +51,11 @@ export default function Trajet({ ville, onVoir }) {
           {res && !res.directes && (
             <p>⚠️ Pas de direct à {ville}. Options :<br />Depuis <b>{dep}</b> : {res.lDep.join(', ') || 'aucune'}<br />Jusqu'à <b>{arr}</b> : {res.lArr.join(', ') || 'aucune'}<br /><small>Correspondance conseillée à <b>{localStorage.getItem('universite') || 'ton université'}</b>.</small></p>
           )}
+          {res && !res.directes && (res.correspondances || []).map((t, i) => (
+            <p key={i}>🔀 <b>{t.c1}</b> jusqu'à <b>{t.hub}</b>, puis <b>{t.c2}</b> jusqu'à {arr}<br />
+              <button className="btn secondary" onClick={() => onVoir(t.c1)}>📍 Voir {t.c1}</button>
+            </p>
+          ))}
         </div>
       </section>
 

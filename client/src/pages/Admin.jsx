@@ -1,6 +1,32 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { supa, adminStats, listUsers, fetchHoraires } from '../supabase.js';
 import { LIGNES } from '../data.js';
+
+function CarteNationale({ bus }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!ref.current) return;
+    const map = L.map(ref.current).setView([12.3, -2.2], 6);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+    (bus || []).forEach((b) => {
+      if (typeof b.lat !== 'number') return;
+      L.circleMarker([b.lat, b.lng], { radius: 8, color: '#fff', fillColor: LIGNES[b.ligne]?.couleur || '#009639', fillOpacity: 1, weight: 2 })
+        .bindPopup(`<b>${b.ligne}</b> (${b.ville})<br>Par ${b.pseudo}`)
+        .addTo(map);
+    });
+    setTimeout(() => map.invalidateSize(), 200);
+    return () => map.remove();
+  }, [bus]);
+  if (!bus || bus.length === 0) return <p className="hint">Aucun bus en base pour la carte nationale.</p>;
+  return (
+    <>
+      <h3>🇧🇫 Bus en direct — tout le Burkina</h3>
+      <div ref={ref} style={{ height: 320, borderRadius: 16, zIndex: 1 }}></div>
+    </>
+  );
+}
 
 const ONGLETS = [
   { id: 'vue', emoji: '📊', label: "Vue d'ensemble" },

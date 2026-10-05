@@ -36,7 +36,7 @@ export async function isAdmin() {
 
 export async function adminStats() {  const [profils, bus] = await Promise.all([
     supa.from('profils').select('ville', { count: 'exact' }),
-    supa.from('bus_positions').select('ville,ligne,pseudo,updated_at'),
+    supa.from('bus_positions').select('ville,ligne,pseudo,lat,lng,updated_at'),
   ]);
   const parVille = {};
   (profils.data || []).forEach((p) => { parVille[p.ville] = (parVille[p.ville] || 0) + 1; });

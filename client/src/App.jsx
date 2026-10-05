@@ -12,7 +12,11 @@ import { supa, getSession, isAdmin, notify } from './supabase.js';
 
 export default function App() {
   const [splash, setSplash] = useState(true);
-  const [page, setPage] = useState('accueil');
+  const PAGES = ['accueil', 'lignes', 'trajet', 'compte', 'premium', 'admin'];
+  const [page, setPage] = useState(() => {
+    const h = location.hash.replace('#/', '');
+    return PAGES.includes(h) ? h : 'accueil';
+  });
   const [session, setSession] = useState(null);
   const [isPremium, setIsPremium] = useState(false);
   const [admin, setAdmin] = useState(false);
@@ -29,6 +33,10 @@ export default function App() {
   const [suiviId, setSuiviId] = useState('');
   const sessionRef = useRef(null);
   sessionRef.current = session;
+
+  useEffect(() => {
+    if (location.hash !== '#/' + page) history.replaceState(null, '', '#/' + page);
+  }, [page]);
 
   // Lien de suivi partagé (?bus=<id>)
   useEffect(() => {
