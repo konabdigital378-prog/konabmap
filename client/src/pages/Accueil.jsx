@@ -30,10 +30,12 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
   const [grandeCarte, setGrandeCarte] = useState(false);
 
   const FONDS = {
-    clair: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-    sombre: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    clair: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    humanitaire: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+    sombre: 'https://server.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
     satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
   };
+  const ATTR = '© OpenStreetMap · HOT · Imagerie © Esri';
 
   const univ = localStorage.getItem('universite') || '';
   const lignesVille = Object.entries(LIGNES).filter(([, l]) => (l.ville || 'Ouagadougou') === ville);
@@ -48,7 +50,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
     mapObj.current = L.map(mapRef.current, { zoomControl: false }).setView([12.3714, -1.5197], 12);
     L.control.zoom({ position: 'bottomright' }).addTo(mapObj.current);
     tileRef.current = L.tileLayer(FONDS[localStorage.getItem('fond') || 'clair'], {
-      maxZoom: 19, attribution: '© OpenStreetMap · © CARTO · Imagerie © Esri',
+      maxZoom: 19, attribution: ATTR,
     }).addTo(mapObj.current);
     lignesLayer.current = L.layerGroup().addTo(mapObj.current);
     highlightLayer.current = L.layerGroup().addTo(mapObj.current);
@@ -62,7 +64,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
     if (!map || !tileRef.current) return;
     map.removeLayer(tileRef.current);
     tileRef.current = L.tileLayer(FONDS[fond], {
-      maxZoom: 19, attribution: '© OpenStreetMap · © CARTO · Imagerie © Esri',
+      maxZoom: 19, attribution: ATTR,
     }).addTo(mapObj.current);
     localStorage.setItem('fond', fond);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -247,9 +249,9 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
 
       <div className="map-wrap">
         <div className="carte-outils">
-          {['clair', 'sombre', 'satellite'].map((f) => (
+          {['clair', 'humanitaire', 'sombre', 'satellite'].map((f) => (
             <button key={f} className={'chip' + (fond === f ? ' on' : '')} onClick={() => setFond(f)}>
-              {f === 'clair' ? '🗺️ Clair' : f === 'sombre' ? '🌙 Sombre' : '🛰️ Satellite'}
+              {f === 'clair' ? '🗺️ Clair' : f === 'humanitaire' ? '🧡 Humanitaire' : f === 'sombre' ? '🌙 Sombre' : '🛰️ Satellite'}
             </button>
           ))}
           <button className="chip" onClick={() => setGrandeCarte((g) => !g)}>{grandeCarte ? '🔽 Réduire' : '⛶ Agrandir'}</button>
