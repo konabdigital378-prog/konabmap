@@ -94,9 +94,12 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [splash]);
 
-  // Temps réel bus
+  // Temps réel bus (+ cache hors-ligne)
   useEffect(() => {
-    const h = (b) => setBusAll(b);
+    const h = (b) => {
+      setBusAll(b);
+      try { localStorage.setItem('lastBus', JSON.stringify({ t: Date.now(), bus: b })); } catch { /* ignore */ }
+    };
     socket.on('bus-list', h);
     return () => socket.off('bus-list', h);
   }, []);

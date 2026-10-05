@@ -3,7 +3,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { LIGNES, VILLES } from '../data.js';
 import { socket } from '../socket.js';
-import { distanceM, formatDist, formatEta, getFavs, AFFL, prochainsDeparts, prochainsExacts, esc, parler } from '../lib.js';
+import { distanceM, formatDist, formatEta, getFavs, AFFL, prochainsDeparts, prochainsExacts, esc, parler, estHeurePointe } from '../lib.js';
 import { shareBusPosition, notify, fetchHoraires, fetchDeparts } from '../supabase.js';
 
 export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocus, isPremium, goPremium, suiviId, clearSuivi }) {
@@ -243,10 +243,20 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
   const voir = (b) => mapObj.current.setView([b.lat, b.lng], 15);
   const meLocaliser = () => { if (userPos) mapObj.current.setView([userPos.lat, userPos.lng], 15); };
 
-  // Bus suivi via lien partagé : on le centre
+  // Bus suivi via lien partagé : on le centre + alerte arrivée à mon arrêt
   const busSuivi = suiviId ? bus.find((b) => b.id === suiviId) : null;
+  const arriveeSignalee = useRef(false);
   useEffect(() => {
+    if (!suiviId) arriveeSignalee.current = false;
     if (busSuivi && mapObj.current) mapObj.current.setView([busSuivi.lat, busSuivi.lng], 15);
+    if (busSuivi && monArret && !arriveeSignalee.current) {
+      const d = distanceM(busSuivi.lat, busSuivi.lng, monArret.lat, monArret.lng);
+      if (d < 800) {
+        arriveeSignalee.current = true;
+        notify(`Ton bus suivi arrive à ${monArret.nom} !`, `Bus ${busSuivi.ligne} à ${formatDist(d)} 🚌`).catch(() => {});
+        parler(`Ton bus suivi arrive à ton arrêt !`);
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [suiviId, bus.length]);
 
@@ -293,7 +303,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
       )}
       <div className="hero">
         <div>
-          <div className="hero-ville">📍 {ville}</div>
+          <div className="hero-ville">📍 {ville}{estHeurePointe() ? ' • 🔥 Heure de pointe' : ''}</div>
           <div className="hero-titre">{univ ? univ.replace(/^Université\s*/, '') : 'Choisis ton université'}</div>
           <div className="hero-stats">
             <div className="hero-stat">🚌 {bus.length}<small>bus en direct</small></div>
@@ -389,6 +399,16 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
         <label><input type="checkbox" checked={favsOnly} onChange={(e) => setFavsOnly(e.target.checked)} /> ⭐ Mes lignes favorites seulement</label>
         <div id="liste-bus">
           {visibles.length === 0 && <p className="hint">Aucun bus partagé pour l'instant. Monte dans un bus et partage !</p>}
+          {visibles.length === 0 && (() => {
+            try {
+              const c = JSON.parse(localStorage.getItem('lastBus') || 'null');
+              if (c?.bus?.length) {
+                const min = Math.max(1, Math.round((Date.now() - c.t) / 60000));
+                return <p className="hint">📶 Hors-ligne : dernières positions connues il y a {min} min ({c.bus.length} bus).</p>;
+              }
+            } catch { /* ignore */ }
+            return null;
+          })()}
           {visibles
             .filter((b) => !recherche || (b.ligne + ' ' + b.pseudo).toLowerCase().includes(recherche.toLowerCase()))
             .map((b) => {

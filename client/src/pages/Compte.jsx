@@ -108,6 +108,18 @@ export default function Compte({ session, onSession, isPremium, goPremium }) {
           <div id="auth-ok">
             <p>✅ Connecté : <b>{session.user.email}</b></p>
             <button className="btn secondary" onClick={async () => { await supa.auth.signOut(); onSession(); }}>Se déconnecter</button>
+            <button className="btn secondary" style={{ color: '#c11f1f' }} onClick={async () => {
+              if (!confirm('Supprimer définitivement ton compte et tes données ?')) return;
+              if (!confirm('Vraiment ? Cette action est irréversible.')) return;
+              try {
+                const t = (await supa.auth.getSession()).data.session?.access_token;
+                const r = await fetch('/api/account', { method: 'DELETE', headers: { Authorization: 'Bearer ' + t } });
+                if (!r.ok) throw new Error('Échec suppression');
+                await supa.auth.signOut();
+                localStorage.clear();
+                location.reload();
+              } catch (e) { alert(e.message); }
+            }}>🗑️ Supprimer mon compte</button>
           </div>
         )}
       </section>

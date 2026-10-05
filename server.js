@@ -292,6 +292,20 @@ app.post('/api/push/send', async (req, res) => {
   } catch (e) { res.status(e.status || 500).json({ message: e.message }); }
 });
 
+// Suppression de compte (données + Auth)
+app.delete('/api/account', async (req, res) => {
+  try {
+    if (!supaAdmin) throw new Error('Service indisponible');
+    const { user } = await userFrom(req);
+    await supaAdmin.from('push_subscriptions').delete().eq('user_id', user.id);
+    await supaAdmin.from('bus_positions').delete().eq('pseudo', (await supaAdmin.from('profils').select('pseudo').eq('user_id', user.id).limit(1)).data?.[0]?.pseudo || '__aucun__');
+    await supaAdmin.from('ville_demandes').delete().eq('user_id', user.id);
+    await supaAdmin.from('profils').delete().eq('user_id', user.id);
+    await supaAdmin.auth.admin.deleteUser(user.id);
+    res.json({ ok: true });
+  } catch (e) { res.status(e.status || 500).json({ message: e.message }); }
+});
+
 // Fallback SPA React
 app.get('*', (req, res, next) => {
   const index = path.join(DIST, 'index.html');

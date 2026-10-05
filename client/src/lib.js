@@ -44,7 +44,13 @@ export function parler(texte) {
   } catch { /* ignore */ }
 }
 
-// Niveaux contributeurs (trajets partagés)
+// Heure de pointe scolaire Ouaga (lun–sam) : 6h30–9h et 16h30–19h30
+export function estHeurePointe() {
+  const n = new Date();
+  if (n.getDay() === 0) return false;
+  const m = n.getHours() * 60 + n.getMinutes();
+  return (m >= 390 && m <= 540) || (m >= 990 && m <= 1170);
+}
 export function niveauContributeur(nb) {
   if (nb >= 50) return { nom: 'Légende 🏆', emoji: '🏆' };
   if (nb >= 20) return { nom: 'Or 🥇', emoji: '🥇' };
