@@ -19,6 +19,7 @@ export default function Admin({ ville }) {
   const [titre, setTitre] = useState('');
   const [message, setMessage] = useState('');
   const [commandes, setCommandes] = useState([]);
+  const [filtreCommandes, setFiltreCommandes] = useState('attente');
   const [codes, setCodes] = useState([]);
   const [cible, setCible] = useState('tous');
   const [ciblePseudo, setCiblePseudo] = useState('');
@@ -44,7 +45,7 @@ export default function Admin({ ville }) {
     try {
       setStats(await adminStats());
       setUsers(await listUsers());
-      const d = await api('/api/admin/orders').catch(() => ({ orders: [] }));
+      const d = await api('/api/admin/orders?statut=' + filtreCommandes).catch(() => ({ orders: [] }));
       setCommandes(d.orders || []);
       setHoraires(await fetchHoraires().catch(() => ({})));
       const { data: deps } = await supa.from('departs').select('*').eq('ville', ville).order('ligne').order('heure').limit(1000);
@@ -84,6 +85,8 @@ export default function Admin({ ville }) {
   };
 
   useEffect(() => { charger(); }, []);
+
+  useEffect(() => { charger(); }, [filtreCommandes]);
 
   useEffect(() => {
     const ch = supa
@@ -267,11 +270,19 @@ export default function Admin({ ville }) {
 
         {onglet === 'commandes' && (
           <>
+            <div className="chips">
+              {[['attente', '🕐 En attente'], ['validated', '✅ Validées'], ['auto_validated', '⚡ Auto'], ['rejected', '❌ Rejetées'], ['toutes', '📋 Toutes']].map(([v, l]) => (
+                <button key={v} className={'chip' + (filtreCommandes === v ? ' on' : '')} onClick={() => setFiltreCommandes(v)}>{l}</button>
+              ))}
+            </div>
+            <button className="btn secondary" onClick={charger}>🔄 Actualiser</button>
             {commandes.map((o) => (
               <div key={o.id} className="bus-item">
-                <b>{o.ref}</b> <small>{o.amount_fcfa} F • {o.pseudo || o.user_id?.slice(0, 8)}</small><br />
+                <b>{o.ref}</b> <small>{o.amount_fcfa} F • {o.pseudo || o.user_id?.slice(0, 8)} • {new Date(o.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</small><br />
                 <small>{o.status} • score OCR {o.ocr_confidence || 0}%</small>
-                {o.ocr_text && <details><summary>Voir la preuve OCR</summary><p className="hint">{o.ocr_text.slice(0, 500)}</p></details>}
+                {o.ocr_text
+                  ? <details><summary>Voir la preuve OCR</summary><p className="hint">{o.ocr_text.slice(0, 500)}</p></details>
+                  : <p className="hint">📷 Aucune capture envoyée par l'étudiant.</p>}
                 <div className="row" style={{ marginTop: 6 }}>
                   <button className="btn primary" style={{ marginTop: 0 }} onClick={() => validerCommande(o.id, true)}>Valider + code</button>
                   <button className="btn secondary" style={{ marginTop: 0 }} onClick={() => validerCommande(o.id, false)}>Rejeter</button>

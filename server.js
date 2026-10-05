@@ -90,9 +90,11 @@ app.post('/api/pay', async (req, res) => {
   try {
     const { user } = await userFrom(req);
     let order = null;
+    const { data: prof } = await supaAdmin.from('profils').select('pseudo').eq('user_id', user.id).limit(1);
+    const pseudo = prof?.[0]?.pseudo || null;
     for (let i = 0; i < 5 && !order; i++) {
       const { data, error } = await supaAdmin.from('orders')
-        .insert({ ref: refCommande(), user_id: user.id, amount_fcfa: PRIX, jours: JOURS, status: 'pending' })
+        .insert({ ref: refCommande(), user_id: user.id, pseudo, amount_fcfa: PRIX, jours: JOURS, status: 'pending' })
         .select().single();
       if (!error) order = data;
     }
@@ -145,7 +147,11 @@ async function requireAdmin(req) {
 app.get('/api/admin/orders', async (req, res) => {
   try {
     await requireAdmin(req);
-    const { data } = await supaAdmin.from('orders').select('*').in('status', ['pending', 'manual_pending']).order('created_at', { ascending: false }).limit(50);
+    const statut = String(req.query.statut || 'attente');
+    let q = supaAdmin.from('orders').select('*').order('created_at', { ascending: false }).limit(50);
+    if (statut === 'attente') q = q.in('status', ['pending', 'manual_pending']);
+    else if (statut !== 'toutes') q = q.eq('status', statut);
+    const { data } = await q;
     res.json({ orders: data || [] });
   } catch (e) { res.status(e.status || 500).json({ message: e.message }); }
 });
