@@ -27,6 +27,11 @@ export function formatEta(m) {
   return minutes < 1 ? 'arrive !' : `~${minutes} min`;
 }
 
+// Échappe le HTML (popups Leaflet = HTML brut, données d'autres utilisateurs)
+export function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
 const toMin = (s) => {
   const [a, b] = String(s || '06:00').split(':').map(Number);
   return a * 60 + b;

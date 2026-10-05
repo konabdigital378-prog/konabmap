@@ -3,7 +3,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { LIGNES, VILLES } from '../data.js';
 import { socket } from '../socket.js';
-import { distanceM, formatDist, formatEta, getFavs, AFFL, prochainsDeparts, prochainsExacts } from '../lib.js';
+import { distanceM, formatDist, formatEta, getFavs, AFFL, prochainsDeparts, prochainsExacts, esc } from '../lib.js';
 import { shareBusPosition, notify, fetchHoraires, fetchDeparts } from '../supabase.js';
 
 export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocus, isPremium, goPremium }) {
@@ -155,10 +155,10 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
       const affColor = b.affluence === 'plein' ? '#EF2D2D' : b.affluence === 'debout' ? '#f5a623' : '#00c853';
       const icon = L.divIcon({
         className: '',
-        html: `<div class="bus-pin${frais ? ' live' : ''}" style="--c:${couleur}"><span>🚌</span><b>${b.ligne}</b><i style="background:${affColor}"></i></div>`,
+        html: `<div class="bus-pin${frais ? ' live' : ''}" style="--c:${couleur}"><span>🚌</span><b>${esc(b.ligne)}</b><i style="background:${affColor}"></i></div>`,
         iconSize: [78, 34], iconAnchor: [39, 17],
       });
-      const popup = `<div class="bus-pop"><b>🚌 Bus ${b.ligne}</b><br>Par ${b.pseudo}${b.destination ? `<br>↓ ${b.destination}` : ''}${b.signalements > 0 ? `<br>⚠️ ${b.signalements} signalement(s)` : ''}</div>`;
+      const popup = `<div class="bus-pop"><b>🚌 Bus ${esc(b.ligne)}</b><br>Par ${esc(b.pseudo)}${b.destination ? `<br>↓ ${esc(b.destination)}` : ''}${b.signalements > 0 ? `<br>⚠️ ${b.signalements} signalement(s)` : ''}</div>`;
       if (!busMarkers.current[b.id]) {
         busMarkers.current[b.id] = L.marker([b.lat, b.lng], { icon }).addTo(map).bindPopup(popup);
       } else {

@@ -13,6 +13,11 @@ const DIST = path.join(__dirname, 'client', 'dist');
 app.use(express.static(fs.existsSync(DIST) ? DIST : path.join(__dirname, 'public')));
 app.use(express.json({ limit: '6mb' }));
 
+// Anti-abus API : 100 req / 15 min par IP, plus strict sur les codes
+const rateLimit = require('express-rate-limit');
+app.use('/api/', rateLimit({ windowMs: 15 * 60 * 1000, max: 100, standardHeaders: true, legacyHeaders: false }));
+app.use('/api/engage', rateLimit({ windowMs: 15 * 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false }));
+
 // Healthcheck pour Render
 app.get('/health', (req, res) => {
   res.json({ ok: true, bus: busActifs.size, time: new Date().toISOString() });
@@ -249,6 +254,10 @@ io.on('connection', (socket) => {
   socket.on('partage-position', (data) => {
     // data: { pseudo, ligne, ville, affluence, destination, lat, lng, vitesse }
     if (typeof data.lat !== 'number' || typeof data.lng !== 'number') return;
+    if (Math.abs(data.lat) > 90 || Math.abs(data.lng) > 180) return;
+    const now = Date.now();
+    if (now - (socket.data.dernierPartage || 0) < 1500) return; // anti-flood
+    socket.data.dernierPartage = now;
     const prev = busActifs.get(socket.id);
     busActifs.set(socket.id, {
       id: socket.id,
@@ -266,6 +275,10 @@ io.on('connection', (socket) => {
   });
 
   socket.on('signalement', ({ busId }) => {
+    const now = Date.now();
+    socket.data.signals = (socket.data.signals || []).filter((t) => now - t < 60000);
+    if (socket.data.signals.length >= 5) return; // max 5 signalements/min
+    socket.data.signals.push(now);
     const b = busActifs.get(busId);
     if (b) {
       b.signalements = (b.signalements || 0) + 1;
