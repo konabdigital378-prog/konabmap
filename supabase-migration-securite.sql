@@ -1,6 +1,7 @@
 -- ===== Migration Sécurité (emails privés, anti-spam) =====
 -- 1. Profils : lecture réservée aux connectés (les emails ne sont plus publics)
 drop policy if exists "lecture publique" on profils;
+drop policy if exists "public all" on profils;
 create policy "lecture connectes" on profils for select using (auth.role() = 'authenticated');
 
 -- 2. Notifications : seul l'admin peut en créer (le serveur utilise service_role, non concerné)
