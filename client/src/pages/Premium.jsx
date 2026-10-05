@@ -53,11 +53,17 @@ export default function Premium({ onPremium, onCompte, session }) {
       setMerchant(d.merchant);
       setPrix(d.prix);
       setJours(d.jours);
+      // Reprend la commande en cours si l'utilisateur revient
+      const encours = (d.orders || []).find((o) => o.status === 'pending' || o.status === 'manual_pending');
+      if (encours) setOrder(encours);
     } catch { /* non connecté */ }
   };
   useEffect(() => { charger(); }, []);
 
   const commander = async () => {
+    if (order && (order.status === 'pending' || order.status === 'manual_pending')) {
+      return setMsg([`Commande ${order.ref} déjà en cours.`, false]);
+    }
     setBusy(true);
     try {
       const d = await api('/api/pay', { method: 'POST' });

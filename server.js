@@ -318,6 +318,7 @@ app.delete('/api/account', async (req, res) => {
 });
 
 // Fallback SPA React
+app.use('/api/', (req, res) => res.status(404).json({ message: 'Introuvable' }));
 app.get('*', (req, res, next) => {
   const index = path.join(DIST, 'index.html');
   if (req.method === 'GET' && fs.existsSync(index)) return res.sendFile(index);

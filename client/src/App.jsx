@@ -216,9 +216,9 @@ export default function App() {
 
       <main>
         <Suspense fallback={<section className="card"><p className="hint">Chargement…</p></section>}>
-        {pageAffichee === 'accueil' && <Accueil ville={profil.ville} userPos={userPos} bus={busVille} isPremium={isPremium} goPremium={goPremium} suiviId={suiviId} clearSuivi={() => setSuiviId('')} go={(p) => { setPage(p); window.scrollTo({ top: 0 }); }} focusLigne={focusLigne} clearFocus={() => setFocusLigne('')} />}
-        {pageAffichee === 'lignes' && <Lignes ville={profil.ville} onVoir={voirLigne} isPremium={isPremium} goPremium={goPremium} bus={busVille} />}
-        {pageAffichee === 'trajet' && <Trajet ville={profil.ville} onVoir={voirLigne} />}
+        {pageAffichee === 'accueil' && <Accueil key={'a'+profil.ville} ville={profil.ville} userPos={userPos} bus={busVille} isPremium={isPremium} goPremium={goPremium} suiviId={suiviId} clearSuivi={() => setSuiviId('')} go={(p) => { setPage(p); window.scrollTo({ top: 0 }); }} focusLigne={focusLigne} clearFocus={() => setFocusLigne('')} />}
+        {pageAffichee === 'lignes' && <Lignes key={'l'+profil.ville} ville={profil.ville} onVoir={voirLigne} isPremium={isPremium} goPremium={goPremium} bus={busVille} />}
+        {pageAffichee === 'trajet' && <Trajet key={'t'+profil.ville} ville={profil.ville} onVoir={voirLigne} />}
         {pageAffichee === 'compte' && <Compte session={session} onSession={refreshSession} isPremium={isPremium} goPremium={goPremium} />}
         {pageAffichee === 'premium' && <Premium onPremium={() => refreshSession()} onCompte={() => { setPage('compte'); window.scrollTo({ top: 0 }); }} session={session} />}
         </Suspense>
