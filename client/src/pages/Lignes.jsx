@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { LIGNES } from '../data.js';
 import { getFavs, prochainsDeparts, prochainsExacts, statutHoraire, typeJour } from '../lib.js';
-import { fetchHoraires, fetchDeparts, demanderVille, topDemandes } from '../supabase.js';
+import { fetchHoraires, fetchDeparts, demanderVille, topDemandes, moyennesAvis, noterLigne } from '../supabase.js';
 
 export default function Lignes({ ville, onVoir, isPremium, goPremium }) {
   const [q, setQ] = useState('');
@@ -9,6 +9,7 @@ export default function Lignes({ ville, onVoir, isPremium, goPremium }) {
   const [horaires, setHoraires] = useState({});
   const [departs, setDeparts] = useState({});
   const [demandes, setDemandes] = useState([]);
+  const [avis, setAvis] = useState({});
   const [nouvelleVille, setNouvelleVille] = useState('');
   const [, tick] = useState(0);
 
@@ -32,7 +33,8 @@ export default function Lignes({ ville, onVoir, isPremium, goPremium }) {
     try {
       await demanderVille(nouvelleVille, localStorage.getItem('pseudo'));
       setNouvelleVille('');
-      chargerDemandes();
+    chargerDemandes();
+    moyennesAvis().then(setAvis).catch(() => {});
       alert('Merci ! Ta ville est proposée 🗳️');
     } catch (e) { alert(e.message || 'Connecte-toi pour proposer'); }
   };
@@ -88,6 +90,15 @@ export default function Lignes({ ville, onVoir, isPremium, goPremium }) {
                   <p className="hint">🕒 Horaires en cours de saisie par l'admin.</p>
                 )}
                 <ul>{l.arrets.map((a) => <li key={a.nom}>{a.nom}</li>)}</ul>
+                <p>
+                  <small>Noter : {avis[c] ? `★ ${avis[c].moy.toFixed(1)} (${avis[c].n}) ` : 'pas encore notée '}</small>
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <span key={n} style={{ cursor: 'pointer', fontSize: 18 }} onClick={async (e) => {
+                      e.preventDefault();
+                      try { await noterLigne(c, n); setAvis(await moyennesAvis()); } catch (err) { alert(err.message); }
+                    }}>⭐</span>
+                  ))}
+                </p>
                 <button className="btn secondary" onClick={() => onVoir(c)}>📍 Voir sur la carte</button>
                 <small>Source: sotraco.bf • Tarifs : agences SOTRACO</small>
               </details>

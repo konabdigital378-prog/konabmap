@@ -81,7 +81,7 @@ async function activerPremium(userId, jours) {
   return fin;
 }
 
-app.get('/api/config', (req, res) => res.json({ merchant: MERCHANT, prix: PRIX, jours: JOURS, devise: 'FCFA' }));
+app.get('/api/config', (req, res) => res.json({ merchant: MERCHANT, prix: PRIX, jours: JOURS, devise: 'FCFA', vapidPublic: process.env.VAPID_PUBLIC || null }));
 
 app.get('/api/pay', async (req, res) => {
   try {
@@ -210,8 +210,7 @@ app.post('/api/admin/codes', async (req, res) => {
   } catch (e) { res.status(e.status || 500).json({ message: e.message }); }
 });
 
-app.post('/api/admin/promote', async (req, res) => {
-  try {
+app.post('/api/admin/promote', async (req, res) => {  try {
     await requireAdmin(req);
     const pseudo = String((req.body || {}).pseudo || '').trim();
     if (!pseudo) throw new Error('Pseudo requis');
@@ -220,6 +219,53 @@ app.post('/api/admin/promote', async (req, res) => {
     const { error } = await supaAdmin.from('admins').upsert({ user_id: data[0].user_id });
     if (error) throw error;
     res.json({ ok: true });
+  } catch (e) { res.status(e.status || 500).json({ message: e.message }); }
+});
+
+// ===== PUSH WEB (VAPID) =====
+let webpush = null;
+try {
+  webpush = require('web-push');
+  if (process.env.VAPID_PUBLIC && process.env.VAPID_PRIVATE) {
+    webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:contact@konabmap.bf', process.env.VAPID_PUBLIC, process.env.VAPID_PRIVATE);
+  } else webpush = null;
+} catch { webpush = null; }
+
+app.post('/api/push/subscribe', async (req, res) => {
+  try {
+    const { user } = await userFrom(req);
+    const { subscription, ville, pseudo } = req.body || {};
+    if (!subscription?.endpoint) throw new Error('Abonnement invalide');
+    const { error } = await supaAdmin.from('push_subscriptions').upsert({
+      endpoint: subscription.endpoint, subscription, user_id: user.id,
+      pseudo: pseudo || null, ville: ville || null, created_at: new Date().toISOString(),
+    });
+    if (error) throw error;
+    res.json({ ok: true });
+  } catch (e) { res.status(e.status || 500).json({ message: e.message }); }
+});
+
+app.post('/api/push/send', async (req, res) => {
+  try {
+    await requireAdmin(req);
+    if (!webpush) throw new Error('Push non configuré (clés VAPID)');
+    const { titre, message, ville, user_id } = req.body || {};
+    if (!titre || !message) throw new Error('Titre + message requis');
+    let q = supaAdmin.from('push_subscriptions').select('endpoint,subscription,user_id,ville');
+    if (user_id) q = q.eq('user_id', user_id);
+    else if (ville) q = q.eq('ville', ville);
+    const { data } = await q.limit(2000);
+    let envoyes = 0, expirés = [];
+    await Promise.all((data || []).map(async (s) => {
+      try {
+        await webpush.sendNotification(s.subscription, JSON.stringify({ titre, message }));
+        envoyes++;
+      } catch (e) {
+        if (e.statusCode === 404 || e.statusCode === 410) expirés.push(s.endpoint);
+      }
+    }));
+    if (expirés.length > 0) await supaAdmin.from('push_subscriptions').delete().in('endpoint', expirés);
+    res.json({ ok: true, envoyes, cibles: (data || []).length });
   } catch (e) { res.status(e.status || 500).json({ message: e.message }); }
 });
 

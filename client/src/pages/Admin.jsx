@@ -25,6 +25,7 @@ export default function Admin({ ville }) {
   const [codes, setCodes] = useState([]);
   const [cible, setCible] = useState('tous');
   const [ciblePseudo, setCiblePseudo] = useState('');
+  const [avecPush, setAvecPush] = useState(true);
   const [events, setEvents] = useState([]);
   const [horaires, setHoraires] = useState({});
   const [editH, setEditH] = useState({});
@@ -140,7 +141,14 @@ export default function Admin({ ville }) {
         ville: cible === 'ville' ? ville : null,
       });
       if (error) throw error;
-      alert(cible === 'perso' ? `Message envoyé à ${ciblePseudo} 📩` : 'Message envoyé 📢');
+      if (avecPush) {
+        try {
+          const r = await api('/api/push/send', { method: 'POST', body: JSON.stringify({ titre, message, user_id, ville: cible === 'ville' ? ville : null }) });
+          alert((cible === 'perso' ? `Message envoyé à ${ciblePseudo} 📩` : 'Message envoyé 📢') + ` (${r.envoyes}/${r.cibles} push)`);
+        } catch (e) { alert('Message enregistré, push échoué : ' + (e.message || e)); }
+      } else {
+        alert(cible === 'perso' ? `Message envoyé à ${ciblePseudo} 📩` : 'Message envoyé 📢');
+      }
       setTitre('');
       setMessage('');
       setCiblePseudo('');
@@ -363,6 +371,7 @@ export default function Admin({ ville }) {
             )}
             <input value={titre} onChange={(e) => setTitre(e.target.value)} placeholder="Titre (ex: Grève ligne L1)" />
             <input value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Message..." />
+            <label><input type="checkbox" checked={avecPush} onChange={(e) => setAvecPush(e.target.checked)} /> 📲 + notification push (app fermée)</label>
             <button className="btn primary" onClick={envoyer}>Envoyer</button>
           </>
         )}

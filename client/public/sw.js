@@ -13,6 +13,16 @@ self.addEventListener('activate', (e) => {
   );
 });
 
+self.addEventListener('push', (e) => {
+  const d = e.data ? e.data.json() : {};
+  e.waitUntil(self.registration.showNotification(d.titre || 'KonabMap 🚌', { body: d.message || '', icon: 'logo.png' }));
+});
+
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  e.waitUntil(clients.openWindow('/'));
+});
+
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);

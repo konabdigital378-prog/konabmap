@@ -6,7 +6,7 @@ import { socket } from '../socket.js';
 import { distanceM, formatDist, formatEta, getFavs, AFFL, prochainsDeparts, prochainsExacts, esc, parler } from '../lib.js';
 import { shareBusPosition, notify, fetchHoraires, fetchDeparts } from '../supabase.js';
 
-export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocus, isPremium, goPremium }) {
+export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocus, isPremium, goPremium, suiviId, clearSuivi }) {
   const mapRef = useRef(null);
   const mapObj = useRef(null);
   const lignesLayer = useRef(null);
@@ -223,6 +223,20 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
   const voir = (b) => mapObj.current.setView([b.lat, b.lng], 15);
   const meLocaliser = () => { if (userPos) mapObj.current.setView([userPos.lat, userPos.lng], 15); };
 
+  // Bus suivi via lien partagé : on le centre
+  const busSuivi = suiviId ? bus.find((b) => b.id === suiviId) : null;
+  useEffect(() => {
+    if (busSuivi && mapObj.current) mapObj.current.setView([busSuivi.lat, busSuivi.lng], 15);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [suiviId, bus.length]);
+
+  const copierLien = async (b) => {
+    try {
+      await navigator.clipboard.writeText(`${location.origin}/?bus=${b.id}`);
+      alert('Lien de suivi copié 🔗 Envoie-le à tes amis !');
+    } catch { alert(`${location.origin}/?bus=${b.id}`); }
+  };
+
   const alerter = (b, distTxt) => {
     if (!alertSonore || dejaAlerte.current[b.id]) return;
     if (alertesFavs && !getFavs().includes(b.ligne)) return;
@@ -241,6 +255,12 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
 
   return (
     <div className="page" id="page-accueil">
+      {suiviId && (
+        <div className="cta-card">
+          {busSuivi ? `👀 Tu suis le bus ${busSuivi.ligne} de ${busSuivi.pseudo}` : '👀 Suivi en cours... (le bus partagera bientôt sa position)'}
+          <button className="btn secondary" onClick={clearSuivi}>Arrêter le suivi</button>
+        </div>
+      )}
       <div className="hero">
         <div>
           <div className="hero-ville">📍 {ville}</div>
@@ -357,6 +377,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
                 <small>{AFFL[b.affluence] || ''}{b.destination ? ` • ↓ ${b.destination}` : ''}</small>
                 <div className="row" style={{ marginTop: 6 }}>
                   <button className="btn secondary" style={{ marginTop: 0 }} onClick={() => voir(b)}>Voir</button>
+                  <button className="btn secondary" style={{ marginTop: 0 }} onClick={() => copierLien(b)}>🔗 Lien</button>
                   <button className="btn secondary" style={{ marginTop: 0 }} onClick={() => signaler(b)}>⚠️ Souci</button>
                 </div>
               </div>

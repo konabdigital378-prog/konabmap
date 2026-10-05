@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import Splash from './components/Splash.jsx';
 import BottomNav from './components/BottomNav.jsx';
 import Accueil from './pages/Accueil.jsx';
-import Lignes from './pages/Lignes.jsx';
-import Trajet from './pages/Trajet.jsx';
-import Compte from './pages/Compte.jsx';
-import Admin from './pages/Admin.jsx';
-import Premium from './pages/Premium.jsx';
+const Lignes = lazy(() => import('./pages/Lignes.jsx'));
+const Trajet = lazy(() => import('./pages/Trajet.jsx'));
+const Compte = lazy(() => import('./pages/Compte.jsx'));
+const Admin = lazy(() => import('./pages/Admin.jsx'));
+const Premium = lazy(() => import('./pages/Premium.jsx'));
 import { socket } from './socket.js';
 import { supa, getSession, isAdmin, notify } from './supabase.js';
 
@@ -26,8 +26,19 @@ export default function App() {
   const [userPos, setUserPos] = useState(null);
   const [installEvt, setInstallEvt] = useState(null);
   const [focusLigne, setFocusLigne] = useState('');
+  const [suiviId, setSuiviId] = useState('');
   const sessionRef = useRef(null);
   sessionRef.current = session;
+
+  // Lien de suivi partagé (?bus=<id>)
+  useEffect(() => {
+    const id = new URLSearchParams(location.search).get('bus');
+    if (id) {
+      setSuiviId(id);
+      setPage('accueil');
+      history.replaceState(null, '', location.pathname);
+    }
+  }, []);
   const [theme, setTheme] = useState(() => localStorage.getItem('km-theme') || 'light');
 
   useEffect(() => {
@@ -81,6 +92,28 @@ export default function App() {
     socket.on('bus-list', h);
     return () => socket.off('bus-list', h);
   }, []);
+
+  // Abonnement push Web (notifications même app fermée)
+  useEffect(() => {
+    if (!session) return;
+    (async () => {
+      try {
+        const cfg = await fetch('/api/config').then((r) => r.json());
+        if (!cfg.vapidPublic || !('serviceWorker' in navigator)) return;
+        const reg = await navigator.serviceWorker.ready;
+        let sub = await reg.pushManager.getSubscription();
+        if (!sub) {
+          const key = Uint8Array.from(atob(cfg.vapidPublic.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
+          sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+        }
+        await fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + session.access_token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ subscription: sub.toJSON(), ville: localStorage.getItem('ville'), pseudo: localStorage.getItem('pseudo') }),
+        });
+      } catch { /* push optionnel */ }
+    })();
+  }, [session]);
 
   // GPS utilisateur
   useEffect(() => {
@@ -168,13 +201,14 @@ export default function App() {
       )}
 
       <main>
-        {pageAffichee === 'accueil' && <Accueil ville={profil.ville} userPos={userPos} bus={busVille} isPremium={isPremium} goPremium={goPremium} go={(p) => { setPage(p); window.scrollTo({ top: 0 }); }} focusLigne={focusLigne} clearFocus={() => setFocusLigne('')} />}
+        <Suspense fallback={<section className="card"><p className="hint">Chargement…</p></section>}>
+        {pageAffichee === 'accueil' && <Accueil ville={profil.ville} userPos={userPos} bus={busVille} isPremium={isPremium} goPremium={goPremium} suiviId={suiviId} clearSuivi={() => setSuiviId('')} go={(p) => { setPage(p); window.scrollTo({ top: 0 }); }} focusLigne={focusLigne} clearFocus={() => setFocusLigne('')} />}
         {pageAffichee === 'lignes' && <Lignes ville={profil.ville} onVoir={voirLigne} isPremium={isPremium} goPremium={goPremium} />}
         {pageAffichee === 'trajet' && <Trajet ville={profil.ville} onVoir={voirLigne} />}
         {pageAffichee === 'compte' && <Compte session={session} onSession={refreshSession} isPremium={isPremium} goPremium={goPremium} />}
         {pageAffichee === 'premium' && <Premium />}
-        {page === 'compte' && <Compte session={session} onSession={refreshSession} />}
-        {page === 'admin' && (admin ? <Admin ville={profil.ville} /> : (
+        </Suspense>
+        {pageAffichee === 'admin' && (admin ? <Admin ville={profil.ville} /> : (
           <div className="page"><section className="card"><p className="hint">🔒 Réservé aux administrateurs.</p></section></div>
         ))}
       </main>

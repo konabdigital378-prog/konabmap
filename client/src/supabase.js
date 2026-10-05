@@ -54,6 +54,26 @@ export async function fetchHoraires() {
   return map;
 }
 
+export async function moyennesAvis() {
+  const { data } = await supa.from('avis').select('ligne,note');
+  const m = {};
+  (data || []).forEach((a) => {
+    if (!m[a.ligne]) m[a.ligne] = { total: 0, n: 0 };
+    m[a.ligne].total += a.note;
+    m[a.ligne].n += 1;
+  });
+  const res = {};
+  for (const [k, v] of Object.entries(m)) res[k] = { moy: v.total / v.n, n: v.n };
+  return res;
+}
+
+export async function noterLigne(ligne, note) {
+  const { data: { user } } = await supa.auth.getUser();
+  if (!user) throw new Error("Connecte-toi pour noter");
+  const { error } = await supa.from('avis').upsert({ ligne, user_id: user.id, note });
+  if (error) throw error;
+}
+
 export async function fetchDeparts(ville) {
   let q = supa.from('departs').select('*').order('heure');
   if (ville) q = q.eq('ville', ville);
