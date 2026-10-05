@@ -26,3 +26,55 @@ export function formatEta(m) {
   const minutes = Math.round((m / 1000 / 20) * 60);
   return minutes < 1 ? 'arrive !' : `~${minutes} min`;
 }
+
+const toMin = (s) => {
+  const [a, b] = String(s || '06:00').split(':').map(Number);
+  return a * 60 + b;
+};
+const toHM = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+
+// Prochains départs théoriques d'une ligne (premier/dernier/fréquence admin)
+export function prochainsDeparts(h, n = 3) {
+  if (!h || h.actif === false) return [];
+  const freq = Math.max(5, h.frequence_min || 20);
+  const now = new Date();
+  const cur = now.getHours() * 60 + now.getMinutes();
+  const res = [];
+  for (let t = toMin(h.premier); t <= toMin(h.dernier) && res.length < n; t += freq) {
+    if (t >= cur) res.push(toHM(t));
+  }
+  return res;
+}
+
+export function statutHoraire(h) {
+  if (!h || h.actif === false) return '⛔ Suspendue';
+  const now = new Date();
+  const cur = now.getHours() * 60 + now.getMinutes();
+  if (cur < toMin(h.premier)) return `▶️ Reprise à ${h.premier}`;
+  if (cur > toMin(h.dernier)) return `🌙 Terminé, reprise ${h.premier}`;
+  return '🟢 En service';
+}
+
+// Type de jour feuille de marche : sem (lun-sam) ou dim (dimanche & fériés)
+export function typeJour() {
+  return new Date().getDay() === 0 ? 'dim' : 'sem';
+}
+
+// Prochains départs EXACTS (feuilles de marche) pour une ligne, groupés par terminus
+export function prochainsExacts(departs, ligne, n = 3) {
+  const t = typeJour();
+  const now = new Date();
+  const cur = now.getHours() * 60 + now.getMinutes();
+  const parTerminus = {};
+  departs
+    .filter((d) => d.ligne === ligne && (d.jours === t || (!d.jours && t === 'sem')))
+    .forEach((d) => {
+      const [a, b] = String(d.heure).split(':').map(Number);
+      const m = a * 60 + b;
+      if (m >= cur) {
+        if (!parTerminus[d.terminus]) parTerminus[d.terminus] = [];
+        if (parTerminus[d.terminus].length < n) parTerminus[d.terminus].push(d.heure.slice(0, 5));
+      }
+    });
+  return parTerminus;
+}

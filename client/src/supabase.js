@@ -34,8 +34,7 @@ export async function isAdmin() {
   return !error && data && data.length > 0;
 }
 
-export async function adminStats() {
-  const [profils, bus] = await Promise.all([
+export async function adminStats() {  const [profils, bus] = await Promise.all([
     supa.from('profils').select('ville', { count: 'exact' }),
     supa.from('bus_positions').select('ville,ligne,pseudo,updated_at'),
   ]);
@@ -44,8 +43,21 @@ export async function adminStats() {
   return { total: profils.count ?? (profils.data || []).length, parVille, bus: bus.data || [] };
 }
 
-export async function listUsers() {
-  const { data } = await supa.from('profils').select('pseudo,email,ville,universite,updated_at').order('updated_at', { ascending: false }).limit(100);
+export async function listUsers() {  const { data } = await supa.from('profils').select('pseudo,email,ville,universite,updated_at').order('updated_at', { ascending: false }).limit(100);
+  return data || [];
+}
+
+export async function fetchHoraires() {
+  const { data } = await supa.from('horaires').select('*');
+  const map = {};
+  (data || []).forEach((h) => { map[h.ligne] = h; });
+  return map;
+}
+
+export async function fetchDeparts(ville) {
+  let q = supa.from('departs').select('*').order('heure');
+  if (ville) q = q.eq('ville', ville);
+  const { data } = await q.limit(2000);
   return data || [];
 }
 

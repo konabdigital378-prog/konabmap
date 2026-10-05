@@ -181,6 +181,19 @@ app.post('/api/admin/codes', async (req, res) => {
   } catch (e) { res.status(e.status || 500).json({ message: e.message }); }
 });
 
+app.post('/api/admin/promote', async (req, res) => {
+  try {
+    await requireAdmin(req);
+    const pseudo = String((req.body || {}).pseudo || '').trim();
+    if (!pseudo) throw new Error('Pseudo requis');
+    const { data } = await supaAdmin.from('profils').select('user_id').eq('pseudo', pseudo).limit(1);
+    if (!data?.[0]?.user_id) throw new Error('Étudiant introuvable');
+    const { error } = await supaAdmin.from('admins').upsert({ user_id: data[0].user_id });
+    if (error) throw error;
+    res.json({ ok: true });
+  } catch (e) { res.status(e.status || 500).json({ message: e.message }); }
+});
+
 // Fallback SPA React
 app.get('*', (req, res, next) => {
   const index = path.join(DIST, 'index.html');

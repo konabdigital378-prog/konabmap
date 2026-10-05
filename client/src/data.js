@@ -715,6 +715,39 @@ export const LIGNES = {
       }
     ]
   },
+  "B11": {
+    "ville": "Bobo-Dioulasso",
+    "nom": "B11 - INSSA (Belle Ville) ↔ UCAO",
+    "couleur": "#660099",
+    "detail": "INSSA Belle Ville - Marché du 22 - Maison de la culture - UCAO. Feuille de marche officielle SOTRACO (horaires exacts dans l'app).",
+    "arrets": [
+      {
+        "nom": "INSSA (Belle Ville)",
+        "lat": 11.186,
+        "lng": -4.355
+      },
+      {
+        "nom": "Marché du 22",
+        "lat": 11.19,
+        "lng": -4.3
+      },
+      {
+        "nom": "Maison de la culture",
+        "lat": 11.18,
+        "lng": -4.295
+      },
+      {
+        "nom": "UCAO",
+        "lat": 11.175,
+        "lng": -4.295
+      },
+      {
+        "nom": "Place Tiéfo Amoro",
+        "lat": 11.178,
+        "lng": -4.306
+      }
+    ]
+  },
   "K1": {
     "ville": "Koudougou",
     "nom": "K1 - Forces vives ↔ Univ Norbert Zongo",

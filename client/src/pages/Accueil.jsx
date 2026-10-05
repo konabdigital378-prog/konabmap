@@ -3,8 +3,8 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { LIGNES, VILLES } from '../data.js';
 import { socket } from '../socket.js';
-import { distanceM, formatDist, formatEta, getFavs, AFFL } from '../lib.js';
-import { shareBusPosition, notify } from '../supabase.js';
+import { distanceM, formatDist, formatEta, getFavs, AFFL, prochainsDeparts, prochainsExacts } from '../lib.js';
+import { shareBusPosition, notify, fetchHoraires, fetchDeparts } from '../supabase.js';
 
 export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocus, isPremium, goPremium }) {
   const mapRef = useRef(null);
@@ -25,6 +25,21 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
   const debutPartage = useRef(null);
   const dejaAlerte = useRef({});
   const userMarker = useRef(null);
+  const [horaires, setHoraires] = useState({});
+  const [departs, setDeparts] = useState({});
+  const [, tick] = useState(0);
+
+  useEffect(() => {
+    fetchHoraires().then(setHoraires).catch(() => {});
+    fetchDeparts(ville).then((d) => {
+      const g = {};
+      d.forEach((x) => { if (!g[x.ligne]) g[x.ligne] = []; g[x.ligne].push(x); });
+      setDeparts(g);
+    }).catch(() => {});
+    const iv = setInterval(() => tick((n) => n + 1), 60000);
+    return () => clearInterval(iv);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ville]);
   const tileRef = useRef(null);
   const [fond, setFond] = useState(() => localStorage.getItem('fond') || 'clair');
   const [grandeCarte, setGrandeCarte] = useState(false);
@@ -246,6 +261,25 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
           </div>
         </div>
       )}
+
+      <section className="card">
+        <h2>🕒 Prochains départs</h2>
+        {(getFavs().length > 0 ? lignesVille.filter(([c]) => getFavs().includes(c)) : lignesVille.slice(0, 4)).map(([c, l]) => {
+          const exacts = prochainsExacts(departs[c] || [], c, 2);
+          const termes = Object.entries(exacts);
+          const freq = prochainsDeparts(horaires[c]);
+          return (
+            <div key={c} className="hist-item">
+              <span><b>{c}</b> <small>{l.nom.split(' - ').slice(1).join(' - ')}</small></span>
+              <small>
+                {termes.length > 0
+                  ? termes.map(([t, hs]) => `📋 ${t.split('(')[0].trim()} ${hs[0]}`).join(' • ')
+                  : freq.length > 0 ? `🟢 ${freq.slice(0, 2).join(' • ')}` : '🌙 Terminé'}
+              </small>
+            </div>
+          );
+        })}
+      </section>
 
       <div className="map-wrap">
         <div className="carte-outils">
