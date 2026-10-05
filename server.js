@@ -372,6 +372,7 @@ io.on('connection', (socket) => {
       destination: String((data.destination || '')).slice(0, 60),
       note: String((data.note || '')).slice(0, 80),
       signalements: prev?.signalements || 0,
+      merci: prev?.merci || 0,
       chauffeur: prev?.chauffeur ?? null,
       chauffeur_self: data.chauffeur_self === true,
       lat: data.lat,
@@ -405,6 +406,18 @@ io.on('connection', (socket) => {
     const b = busActifs.get(busId);
     if (b) {
       b.signalements = (b.signalements || 0) + 1;
+      io.emit('bus-list', listeBus());
+    }
+  });
+
+  socket.on('remerciement', ({ busId }) => {
+    const now = Date.now();
+    socket.data.mercis = (socket.data.mercis || []).filter((t) => now - t < 60000);
+    if (socket.data.mercis.length >= 5) return; // max 5 mercis/min
+    socket.data.mercis.push(now);
+    const b = busActifs.get(busId);
+    if (b) {
+      b.merci = (b.merci || 0) + 1;
       io.emit('bus-list', listeBus());
     }
   });

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { LIGNES } from '../data.js';
+import { dureeTrajet } from '../lib.js';
 
 export default function Trajet({ ville, onVoir }) {
   const lignesVille = Object.entries(LIGNES).filter(([, l]) => (l.ville || 'Ouagadougou') === ville);
@@ -45,9 +46,12 @@ export default function Trajet({ ville, onVoir }) {
           {arrets.map((n) => <option key={n} value={n}>{n}</option>)}
         </select>
         <button className="btn primary" onClick={chercher}>Chercher</button>
-        <div id="resultat-itineraire">          {res && res.directes && res.directes.map(([c, l]) => (
-            <p key={c}>✅ Prends <b>{c}</b> : {l.nom}<br /><small>{dep} → {arr} direct, sans correspondance</small><br /><button className="btn secondary" onClick={() => onVoir(c)}>📍 Voir sur la carte</button></p>
-          ))}
+        <div id="resultat-itineraire">          {res && res.directes && res.directes.map(([c, l]) => {
+            const duree = dureeTrajet(l, dep, arr);
+            return (
+              <p key={c}>✅ Prends <b>{c}</b> : {l.nom}<br /><small>{dep} → {arr} direct, sans correspondance{duree ? ` • ${duree} de trajet` : ''}</small><br /><button className="btn secondary" onClick={() => onVoir(c)}>📍 Voir sur la carte</button></p>
+            );
+          })}
           {res && !res.directes && (
             <p>⚠️ Pas de direct à {ville}. Options :<br />Depuis <b>{dep}</b> : {res.lDep.join(', ') || 'aucune'}<br />Jusqu'à <b>{arr}</b> : {res.lArr.join(', ') || 'aucune'}<br /><small>Correspondance conseillée à <b>{localStorage.getItem('universite') || 'ton université'}</b>.</small></p>
           )}

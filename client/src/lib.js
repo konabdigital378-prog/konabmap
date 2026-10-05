@@ -143,6 +143,25 @@ export function typeJour() {
   return new Date().getDay() === 0 ? 'dim' : 'sem';
 }
 
+// Durée estimée du trajet entre 2 arrêts d'une ligne (20 km/h urbain)
+export function dureeTrajet(ligne, dep, arr) {
+  const i1 = ligne.arrets.findIndex((a) => a.nom === dep);
+  const i2 = ligne.arrets.findIndex((a) => a.nom === arr);
+  if (i1 < 0 || i2 < 0) return null;
+  const [debut, fin] = i1 < i2 ? [i1, i2] : [i2, i1];
+  let m = 0;
+  for (let i = debut; i < fin; i++) {
+    const a = ligne.arrets[i], b = ligne.arrets[i + 1];
+    const dLat = ((b.lat - a.lat) * Math.PI) / 180, dLon = ((b.lng - a.lng) * Math.PI) / 180;
+    const h =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+    m += 2 * 6371000 * Math.asin(Math.sqrt(h));
+  }
+  const min = Math.max(2, Math.round((m / 1000 / 20) * 60));
+  return `≈${min} min`;
+}
+
 // Prochains départs EXACTS (feuilles de marche) pour une ligne, groupés par terminus
 export function prochainsExacts(departs, ligne, n = 3) {
   const t = typeJour();

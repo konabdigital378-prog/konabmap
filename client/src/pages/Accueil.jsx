@@ -358,13 +358,15 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
           const exacts = prochainsExacts(departs[c] || [], c, 2);
           const termes = Object.entries(exacts);
           const freq = prochainsDeparts(horaires[c]);
+          const directs = bus.filter((b) => b.ligne === c).slice(0, 2);
           return (
             <div key={c} className="hist-item">
               <span><b>{c}</b> <small>{l.nom.split(' - ').slice(1).join(' - ')}</small></span>
               <small>
+                {directs.length > 0 && <span>🟢 {directs.map((b) => b.pseudo.split(' ')[0]).join(', ')} en direct • </span>}
                 {termes.length > 0
                   ? termes.map(([t, hs]) => `📋 ${t.split('(')[0].trim()} ${hs[0]}`).join(' • ')
-                  : freq.length > 0 ? `🟢 ${freq.slice(0, 2).join(' • ')}` : '🌙 Terminé'}
+                  : freq.length > 0 ? `🕒 ${freq.slice(0, 2).join(' • ')}` : '🌙 Terminé'}
               </small>
             </div>
           );
@@ -465,11 +467,12 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
                 {aArret ? ' • 🅿️ à l’arrêt' : ` • ${Math.round(b.vitesse * 3.6)} km/h`}
                 {age !== null ? (age < 8 ? ' • 🟢 en direct' : ` • maj il y a ${age}s`) : ''}<br />
                 {etaArret && monArret && <span>🚏 Arrive à <b>{monArret.nom}</b> dans ~<b>{etaArret}</b><br /></span>}
-                <small>{AFFL[b.affluence] || ''}{b.destination ? ` • ↓ ${b.destination}` : ''}{b.note ? ` • 💬 ${b.note}` : ''}</small>
+                <small>{AFFL[b.affluence] || ''}{b.destination ? ` • ↓ ${b.destination}` : ''}{b.note ? ` • 💬 ${b.note}` : ''}{b.merci > 0 ? ` • 🙏x${b.merci}` : ''}</small>
                 <div className="row" style={{ marginTop: 6 }}>
                   <button className="btn secondary" style={{ marginTop: 0 }} onClick={() => voir(b)}>Voir</button>
                   <button className="btn secondary" style={{ marginTop: 0 }} onClick={() => copierLien(b)}>🔗 Lien</button>
                   <button className="btn secondary" style={{ marginTop: 0 }} onClick={() => partagerWhatsApp(b)}>💬 WhatsApp</button>
+                  <button className="btn secondary" style={{ marginTop: 0 }} onClick={() => { socket.emit('remerciement', { busId: b.id }); alert('Merci envoyé au partageur 🙏'); }}>🙏 Merci</button>
                   <button className="btn secondary" style={{ marginTop: 0 }} onClick={() => signaler(b)}>⚠️ Souci</button>
                 </div>
               </div>
