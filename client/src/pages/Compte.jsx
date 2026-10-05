@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supa, saveProfil } from '../supabase.js';
 import { VILLES, LIGNES } from '../data.js';
+import { niveauContributeur } from '../lib.js';
 
 function erreurAmicale(e, setMsg, setCooldown) {
   const m = String(e?.message || e || '');
@@ -85,6 +86,7 @@ export default function Compte({ session, onSession, isPremium, goPremium }) {
 
   return (
     <div className="page" id="page-compte">
+      <Reseau />
       <section className="card" id="auth-card">
         <h2>🔐 Mon compte</h2>
         {!session ? (
@@ -134,6 +136,13 @@ export default function Compte({ session, onSession, isPremium, goPremium }) {
         </section>
       )}
 
+      {session && (
+        <section className="card">
+          <h2>🏅 Mon niveau contributeur</h2>
+          <Badge />
+          <button className="btn secondary" onClick={inviter}>💌 Inviter mes amis sur KonabMap</button>
+        </section>
+      )}
       {session && <Historique isPremium={isPremium} goPremium={goPremium} />}
       {session && <MesNotifications />}
     </div>
@@ -167,6 +176,42 @@ function MesNotifications() {
       ))}
     </section>
   );
+}
+
+function Reseau() {
+  const [s, setS] = useState(null);
+  useEffect(() => {
+    fetch('/api/stats').then((r) => r.json()).then(setS).catch(() => {});
+  }, []);
+  if (!s) return null;
+  return (
+    <section className="card">
+      <h2>🇧🇫 Le réseau KonabMap</h2>
+      <div className="hero-stats">
+        <div className="hero-stat" style={{ background: '#eafff1', color: '#062a5e' }}>👥 {s.etudiants ?? '—'}<small>étudiants</small></div>
+        <div className="hero-stat" style={{ background: '#eafff1', color: '#062a5e' }}>🚌 {s.busDirect ?? '—'}<small>bus en direct</small></div>
+        <div className="hero-stat" style={{ background: '#eafff1', color: '#062a5e' }}>📋 {s.lignesHorairesExacts ?? '—'}<small>lignes à horaires exacts</small></div>
+      </div>
+    </section>
+  );
+}
+
+function Badge() {  let nb = 0;
+  try { nb = JSON.parse(localStorage.getItem('trajets') || '[]').length; } catch { /* ignore */ }
+  const niv = niveauContributeur(nb);
+  return <p style={{ fontSize: 18 }}>Partages : <b>{nb}</b> • Niveau <b>{niv.nom}</b></p>;
+}
+
+async function inviter() {
+  const txt = '🚌 Rejoins-moi sur KonabMap : suis les bus SOTRACO en temps réel ! ';
+  const url = location.origin;
+  try {
+    if (navigator.share) await navigator.share({ title: 'KonabMap', text: txt, url });
+    else {
+      await navigator.clipboard.writeText(txt + url);
+      alert('Lien copié, envoie-le à tes amis 💌');
+    }
+  } catch { /* annulé */ }
 }
 
 function Historique({ isPremium, goPremium }) {

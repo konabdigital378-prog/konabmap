@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { LIGNES } from '../data.js';
-import { getFavs, prochainsDeparts, prochainsExacts, statutHoraire, typeJour } from '../lib.js';
+import { getFavs, prochainsDeparts, prochainsExacts, statutHoraire, typeJour, telechargerICS, toutesHeures } from '../lib.js';
 import { fetchHoraires, fetchDeparts, demanderVille, topDemandes, moyennesAvis, noterLigne } from '../supabase.js';
 
 export default function Lignes({ ville, onVoir, isPremium, goPremium }) {
@@ -99,7 +99,15 @@ export default function Lignes({ ville, onVoir, isPremium, goPremium }) {
                     }}>⭐</span>
                   ))}
                 </p>
-                <button className="btn secondary" onClick={() => onVoir(c)}>📍 Voir sur la carte</button>
+                <div className="row">
+                  <button className="btn secondary" style={{ marginTop: 0 }} onClick={() => onVoir(c)}>📍 Voir</button>
+                  <button className="btn secondary" style={{ marginTop: 0 }} onClick={() => {
+                    const ex = Object.values(prochainsExacts(departs[c] || [], c, 12)).flat();
+                    const heures = ex.length > 0 ? ex : toutesHeures(horaires[c]);
+                    if (heures.length === 0) return alert("Aucun départ aujourd'hui");
+                    telechargerICS(c, heures);
+                  }}>📅 Agenda</button>
+                </div>
                 <small>Source: sotraco.bf • Tarifs : agences SOTRACO</small>
               </details>
             );

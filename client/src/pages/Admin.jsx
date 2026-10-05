@@ -357,6 +357,17 @@ export default function Admin({ ville }) {
         {onglet === 'users' && (
           <>
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="🔍 Rechercher (pseudo, email, ville)..." style={{ marginBottom: 8 }} />
+            <div className="row">
+              <button className="btn secondary" style={{ marginTop: 0 }} onClick={() => {
+                const csv = 'pseudo;email;ville;universite\n' + usersFiltres.map((u) => [u.pseudo, u.email || '', u.ville || '', u.universite || ''].join(';')).join('\n');
+                const url = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv' }));
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'etudiants-konabmap.csv';
+                a.click();
+                setTimeout(() => URL.revokeObjectURL(url), 5000);
+              }}>📥 Export CSV</button>
+            </div>
             <p className="hint">👥 {usersFiltres.length} étudiant(s)</p>
             {usersFiltres.map((u) => (
               <div key={u.pseudo} className="bus-item">

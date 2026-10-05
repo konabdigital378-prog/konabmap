@@ -44,6 +44,34 @@ export function parler(texte) {
   } catch { /* ignore */ }
 }
 
+// Niveaux contributeurs (trajets partagés)
+export function niveauContributeur(nb) {
+  if (nb >= 50) return { nom: 'Légende 🏆', emoji: '🏆' };
+  if (nb >= 20) return { nom: 'Or 🥇', emoji: '🥇' };
+  if (nb >= 10) return { nom: 'Argent 🥈', emoji: '🥈' };
+  if (nb >= 3) return { nom: 'Bronze 🥉', emoji: '🥉' };
+  return { nom: 'Débutant 🌱', emoji: '🌱' };
+}
+
+// Exporte les départs d'une ligne (aujourd'hui) en fichier agenda .ics
+export function telechargerICS(ligne, heures) {
+  const j = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const jour = `${j.getFullYear()}${pad(j.getMonth() + 1)}${pad(j.getDate())}`;
+  const events = heures.map((h) => {
+    const [a, b] = h.split(':');
+    const debut = `${jour}T${a}${b}00`;
+    return `BEGIN:VEVENT\nUID:${ligne}-${h}-${jour}@konabmap\nDTSTART:${debut}\nDURATION:PT30M\nSUMMARY:Bus ${ligne} — KonabMap\nEND:VEVENT`;
+  }).join('\n');
+  const ics = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//KonabMap//Bus//FR\n${events}\nEND:VCALENDAR`;
+  const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `bus-${ligne}.ics`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
 const toMin = (s) => {
   const [a, b] = String(s || '06:00').split(':').map(Number);
   return a * 60 + b;
@@ -72,7 +100,18 @@ export function statutHoraire(h) {
   return '🟢 En service';
 }
 
-// Type de jour feuille de marche : sem (lun-sam) ou dim (dimanche & fériés)
+// Toutes les heures restantes aujourd'hui (modèle fréquence) — pour export agenda
+export function toutesHeures(h) {
+  if (!h || h.actif === false) return [];
+  const freq = Math.max(5, h.frequence_min || 20);
+  const now = new Date();
+  const cur = now.getHours() * 60 + now.getMinutes();
+  const res = [];
+  for (let t = toMin(h.premier); t <= toMin(h.dernier); t += freq) {
+    if (t >= cur) res.push(toHM(t));
+  }
+  return res;
+}
 export function typeJour() {
   return new Date().getDay() === 0 ? 'dim' : 'sem';
 }

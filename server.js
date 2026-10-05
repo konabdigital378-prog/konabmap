@@ -83,6 +83,29 @@ async function activerPremium(userId, jours) {
 
 app.get('/api/config', (req, res) => res.json({ merchant: MERCHANT, prix: PRIX, jours: JOURS, devise: 'FCFA', vapidPublic: process.env.VAPID_PUBLIC || null }));
 
+// Statistiques publiques nationales (aucune donnée personnelle)
+app.get('/api/stats', async (req, res) => {
+  try {
+    if (!supaAdmin) return res.json({ busDirect: busActifs.size });
+    const [{ count: etudiants }, { count: votes }, { data: lignes }] = await Promise.all([
+      supaAdmin.from('profils').select('pseudo', { count: 'exact', head: true }),
+      supaAdmin.from('ville_demandes').select('id', { count: 'exact', head: true }),
+      supaAdmin.from('departs').select('ligne'),
+    ]);
+    const lignesExactes = new Set((lignes || []).map((d) => d.ligne)).size;
+    res.json({ busDirect: busActifs.size, etudiants: etudiants ?? 0, votesVilles: votes ?? 0, lignesHorairesExacts: lignesExactes });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+// Purge auto des positions de +30 min en base (toutes les 10 min)
+setInterval(async () => {
+  try {
+    if (!supaAdmin) return;
+    const limite = new Date(Date.now() - 30 * 60000).toISOString();
+    await supaAdmin.from('bus_positions').delete().lt('updated_at', limite);
+  } catch { /* ignore */ }
+}, 10 * 60000);
+
 app.get('/api/pay', async (req, res) => {
   try {
     const { user } = await userFrom(req);
