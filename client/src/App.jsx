@@ -52,6 +52,8 @@ export default function App() {
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem('km-theme', theme);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = theme === 'dark' ? '#0e1512' : '#009639';
   }, [theme]);
 
   const montrerBienvenue = useCallback((pseudo, ville, retour) => {
@@ -217,7 +219,7 @@ export default function App() {
         {pageAffichee === 'lignes' && <Lignes ville={profil.ville} onVoir={voirLigne} isPremium={isPremium} goPremium={goPremium} />}
         {pageAffichee === 'trajet' && <Trajet ville={profil.ville} onVoir={voirLigne} />}
         {pageAffichee === 'compte' && <Compte session={session} onSession={refreshSession} isPremium={isPremium} goPremium={goPremium} />}
-        {pageAffichee === 'premium' && <Premium />}
+        {pageAffichee === 'premium' && <Premium onPremium={() => refreshSession()} />}
         </Suspense>
         {pageAffichee === 'admin' && (admin ? <Admin ville={profil.ville} /> : (
           <div className="page"><section className="card"><p className="hint">🔒 Réservé aux administrateurs.</p></section></div>

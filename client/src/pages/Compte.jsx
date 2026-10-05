@@ -72,6 +72,19 @@ export default function Compte({ session, onSession, isPremium, goPremium }) {
     Object.values(LIGNES).filter((l) => (l.ville || 'Ouagadougou') === ville).flatMap((l) => l.arrets.map((a) => a.nom))
   )];
 
+  const detecterVille = () => {
+    if (!navigator.geolocation) return alert('GPS non supporté');
+    navigator.geolocation.getCurrentPosition((pos) => {
+      let best = null, bestD = Infinity;
+      for (const [v, info] of Object.entries(VILLES)) {
+        const dLat = pos.coords.latitude - info.centre[0], dLng = pos.coords.longitude - info.centre[1];
+        const d = dLat * dLat + dLng * dLng;
+        if (d < bestD) { bestD = d; best = v; }
+      }
+      if (best) { setVille(best); setUniv(''); alert(`Ville détectée : ${best} 📍`); }
+    }, () => alert('Active la localisation GPS'));
+  };
+
   const sauverProfil = async () => {
     const p = pseudo.trim() || 'Étudiant';
     localStorage.setItem('pseudo', p);
@@ -133,6 +146,7 @@ export default function Compte({ session, onSession, isPremium, goPremium }) {
           <select value={ville} onChange={(e) => { setVille(e.target.value); setUniv(''); }}>
             {Object.keys(VILLES).map((v) => <option key={v} value={v}>{v}</option>)}
           </select>
+          <button className="btn secondary" onClick={detecterVille}>📍 Détecter ma ville (GPS)</button>
           <label>Ton université</label>
           <select value={univ} onChange={(e) => setUniv(e.target.value)}>
             <option value="">— Choisir —</option>
@@ -163,6 +177,7 @@ export default function Compte({ session, onSession, isPremium, goPremium }) {
 
 function MesNotifications() {
   const [notifs, setNotifs] = useState([]);
+  const [nouvelles, setNouvelles] = useState(0);
   useEffect(() => {
     (async () => {
       try {
@@ -172,14 +187,18 @@ function MesNotifications() {
         const { data } = await supa.from('notifications').select('titre,message,created_at')
           .or(`user_id.eq.${user.id},user_id.is.null`)
           .order('created_at', { ascending: false }).limit(20);
-        setNotifs((data || []).filter((n) => !n.ville || n.ville === ville));
+        const liste = (data || []).filter((n) => !n.ville || n.ville === ville);
+        const vu = Number(localStorage.getItem('notifsVues') || 0);
+        setNouvelles(liste.filter((n) => new Date(n.created_at).getTime() > vu).length);
+        setNotifs(liste);
+        localStorage.setItem('notifsVues', String(Date.now()));
       } catch { /* ignore */ }
     })();
   }, []);
   if (notifs.length === 0) return null;
   return (
     <section className="card">
-      <h2>🔔 Mes notifications</h2>
+      <h2>🔔 Mes notifications {nouvelles > 0 && <span style={{ background: '#EF2D2D', color: '#fff', borderRadius: 999, padding: '2px 10px', fontSize: 13 }}>{nouvelles} nouvelles</span>}</h2>
       {notifs.map((n, i) => (
         <div key={i} className="hist-item">
           <span><b>{n.titre}</b><br /><small>{n.message}</small></span>

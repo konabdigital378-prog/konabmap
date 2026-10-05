@@ -97,6 +97,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
   useEffect(() => {
     const map = mapObj.current;
     if (!map) return;
+    clearFocus();
     lignesLayer.current.clearLayers();
     const v = VILLES[ville] || VILLES['Ouagadougou'];
     map.setView(v.centre, v.zoom);
@@ -117,19 +118,21 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ville]);
 
-  // Ligne mise en avant depuis Lignes/Trajet
+  // Ligne mise en avant (depuis Lignes/Trajet, ou bus suivi)
+  const busSuivi = suiviId ? bus.find((b) => b.id === suiviId) : null;
+  const ligneFocus = focusLigne || busSuivi?.ligne || '';
   useEffect(() => {
     const map = mapObj.current;
     if (!map) return;
     highlightLayer.current.clearLayers();
-    if (focusLigne && LIGNES[focusLigne]) {
-      const l = LIGNES[focusLigne];
+    if (ligneFocus && LIGNES[ligneFocus]) {
+      const l = LIGNES[ligneFocus];
       const latlngs = l.arrets.map((a) => [a.lat, a.lng]);
       L.polyline(latlngs, { color: '#FEDD00', weight: 9, opacity: 0.9 }).addTo(highlightLayer.current);
       L.polyline(latlngs, { color: l.couleur, weight: 5, opacity: 1 }).addTo(highlightLayer.current);
       map.fitBounds(latlngs, { padding: [30, 30] });
     }
-  }, [focusLigne]);
+  }, [ligneFocus]);
   useEffect(() => {
     const map = mapObj.current;
     if (!map || !userPos) return;
@@ -244,7 +247,6 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
   const meLocaliser = () => { if (userPos) mapObj.current.setView([userPos.lat, userPos.lng], 15); };
 
   // Bus suivi via lien partagé : on le centre + alerte arrivée à mon arrêt
-  const busSuivi = suiviId ? bus.find((b) => b.id === suiviId) : null;
   const arriveeSignalee = useRef(false);
   useEffect(() => {
     if (!suiviId) arriveeSignalee.current = false;

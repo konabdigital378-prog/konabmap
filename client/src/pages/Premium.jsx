@@ -24,7 +24,7 @@ export function usePremium() {
   return { premium, refreshPremium: refresh };
 }
 
-export default function Premium() {
+export default function Premium({ onPremium }) {
   const { premium, refreshPremium } = usePremium();
   const [merchant, setMerchant] = useState('...');
   const [prix, setPrix] = useState(100);
@@ -120,6 +120,7 @@ export default function Premium() {
       setMsg([`Code accepté ✅ Pass actif ${d.jours} jours !`, false]);
       setCode('');
       refreshPremium();
+      if (onPremium) onPremium();
     } catch (e) { setMsg([e.message, true]); } finally { setBusy(false); }
   };
 
