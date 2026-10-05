@@ -68,11 +68,28 @@ export default function Premium() {
     } catch (e) { setMsg([e.message, true]); } finally { setBusy(false); }
   };
 
+  const compresser = (f) => new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const max = 1280;
+      const ratio = Math.min(1, max / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * ratio);
+      canvas.height = Math.round(img.height * ratio);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(img.src);
+      resolve(canvas.toDataURL('image/jpeg', 0.72));
+    };
+    img.onerror = () => reject(new Error('Image illisible'));
+    img.src = URL.createObjectURL(f);
+  });
+
   const envoyerPreuve = async (f) => {
     if (!f || !order) return;
     setBusy(true);
     setOcrPct(0);
     try {
+      const uri = await compresser(f);
       setOcrPct(5);
       const { createWorker } = await import('tesseract.js');
       const worker = await createWorker(['fra', 'eng'], undefined, {
@@ -81,7 +98,7 @@ export default function Premium() {
       const { data } = await worker.recognize(f);
       await worker.terminate();
       setOcrPct(100);
-      const d = await api('/api/pay', { method: 'PUT', body: JSON.stringify({ orderId: order.id, ocrText: data.text }) });
+      const d = await api('/api/pay', { method: 'PUT', body: JSON.stringify({ orderId: order.id, ocrText: data.text, imageDataUri: uri }) });
       if (d.auto) {
         setMsg([`Paiement vérifié ✅ Ton code : ${d.code} — il est aussi dans tes notifications. Entre-le ci-dessous pour activer ton pass !`, false]);
         setCode(d.code);

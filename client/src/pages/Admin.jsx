@@ -20,6 +20,7 @@ export default function Admin({ ville }) {
   const [message, setMessage] = useState('');
   const [commandes, setCommandes] = useState([]);
   const [filtreCommandes, setFiltreCommandes] = useState('attente');
+  const [imageVoir, setImageVoir] = useState('');
   const [codes, setCodes] = useState([]);
   const [cible, setCible] = useState('tous');
   const [ciblePseudo, setCiblePseudo] = useState('');
@@ -59,8 +60,14 @@ export default function Admin({ ville }) {
     }
   };
 
-  const validerCommande = async (id, ok) => {
-    if (ok && !confirm('Valider ce paiement ? Un code sera envoyé à l’étudiant.')) return;
+  const voirImage = async (id) => {
+    try {
+      const d = await api('/api/admin/order-image/' + id);
+      setImageVoir(d.image);
+    } catch (e) { alert(e.message || 'Aucune image'); }
+  };
+
+  const validerCommande = async (id, ok) => {    if (ok && !confirm('Valider ce paiement ? Un code sera envoyé à l’étudiant.')) return;
     if (!ok && !confirm('Rejeter ce paiement ?')) return;
     try {
       const d = await api('/api/admin/validate', { method: 'POST', body: JSON.stringify({ orderId: id, ok }) });
@@ -284,6 +291,11 @@ export default function Admin({ ville }) {
                   ? <details><summary>Voir la preuve OCR</summary><p className="hint">{o.ocr_text.slice(0, 500)}</p></details>
                   : <p className="hint">📷 Aucune capture envoyée par l'étudiant.</p>}
                 <div className="row" style={{ marginTop: 6 }}>
+                  <button className="btn secondary" style={{ marginTop: 0 }} onClick={() => voirImage(o.id)}>🖼️ Image</button>
+                  <button className="btn primary" style={{ marginTop: 0 }} onClick={() => validerCommande(o.id, true)}>Valider + code</button>
+                  <button className="btn secondary" style={{ marginTop: 0 }} onClick={() => validerCommande(o.id, false)}>Rejeter</button>
+                </div>
+                <div className="row" style={{ marginTop: 6 }}>
                   <button className="btn primary" style={{ marginTop: 0 }} onClick={() => validerCommande(o.id, true)}>Valider + code</button>
                   <button className="btn secondary" style={{ marginTop: 0 }} onClick={() => validerCommande(o.id, false)}>Rejeter</button>
                 </div>
@@ -291,6 +303,15 @@ export default function Admin({ ville }) {
             ))}
             {commandes.length === 0 && <p className="hint">Aucune commande en attente.</p>}
           </>
+        )}
+
+        {imageVoir && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 5000, background: 'rgba(0,0,0,.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 12 }} onClick={() => setImageVoir('')}>
+            <div style={{ maxWidth: 560, width: '100%' }} onClick={(e) => e.stopPropagation()}>
+              <img src={imageVoir} alt="Preuve de paiement" style={{ width: '100%', borderRadius: 14 }} />
+              <button className="btn primary" onClick={() => setImageVoir('')}>Fermer</button>
+            </div>
+          </div>
         )}
 
         {onglet === 'users' && (

@@ -81,7 +81,7 @@ app.get('/api/config', (req, res) => res.json({ merchant: MERCHANT, prix: PRIX, 
 app.get('/api/pay', async (req, res) => {
   try {
     const { user } = await userFrom(req);
-    const { data } = await supaAdmin.from('orders').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(20);
+    const { data } = await supaAdmin.from('orders').select('id,ref,amount_fcfa,jours,status,ocr_confidence,created_at,validated_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(20);
     res.json({ orders: data || [], merchant: MERCHANT, prix: PRIX, jours: JOURS });
   } catch (e) { res.status(e.status || 500).json({ message: e.message }); }
 });
@@ -106,21 +106,37 @@ app.post('/api/pay', async (req, res) => {
 app.put('/api/pay', async (req, res) => {
   try {
     const { user } = await userFrom(req);
-    const { orderId, ocrText } = req.body || {};
-    const { data: order, error: e1 } = await supaAdmin.from('orders').select('*').eq('id', orderId).eq('user_id', user.id).single();
+    const { orderId, ocrText, imageDataUri } = req.body || {};
+    const { data: order, error: e1 } = await supaAdmin.from('orders').select('id,user_id,jours').eq('id', orderId).eq('user_id', user.id).single();
     if (e1 || !order) throw new Error('Commande introuvable');
     const chiffres = String(ocrText || '').replace(/\D/g, '');
     const aMontant = /(^|[^0-9])100([^0-9]|$)/.test(String(ocrText || '').replace(/[\s.,]/g, ' ').replace(/[^0-9 ]/g, ''));
     const marchandChiffres = MERCHANT.replace(/\D/g, '');
     const aMarchand = marchandChiffres.length >= 8 && chiffres.includes(marchandChiffres);
     const confidence = (aMontant ? 50 : 0) + (aMarchand ? 50 : 0);
+    const patch = { ocr_text: String(ocrText || '').slice(0, 4000), ocr_confidence: confidence };
+    if (typeof imageDataUri === 'string' && imageDataUri.startsWith('data:image/') && imageDataUri.length < 4000000) {
+      patch.image_data = imageDataUri;
+    }
     if (confidence >= 100) {
       const code = await envoyerCodeAbo(user.id, order.jours, null, 'Preuve convaincante. ');
-      await supaAdmin.from('orders').update({ status: 'auto_validated', ocr_text: String(ocrText || '').slice(0, 4000), ocr_confidence: confidence, validated_at: new Date().toISOString() }).eq('id', order.id);
+      patch.status = 'auto_validated';
+      patch.validated_at = new Date().toISOString();
+      await supaAdmin.from('orders').update(patch).eq('id', order.id);
       return res.json({ auto: true, confidence, code });
     }
-    await supaAdmin.from('orders').update({ status: 'manual_pending', ocr_text: String(ocrText || '').slice(0, 4000), ocr_confidence: confidence }).eq('id', order.id);
+    patch.status = 'manual_pending';
+    await supaAdmin.from('orders').update(patch).eq('id', order.id);
     res.json({ auto: false, confidence });
+  } catch (e) { res.status(e.status || 500).json({ message: e.message }); }
+});
+
+app.get('/api/admin/order-image/:id', async (req, res) => {
+  try {
+    await requireAdmin(req);
+    const { data } = await supaAdmin.from('orders').select('image_data').eq('id', req.params.id).single();
+    if (!data?.image_data) throw new Error('Aucune image pour cette commande');
+    res.json({ image: data.image_data });
   } catch (e) { res.status(e.status || 500).json({ message: e.message }); }
 });
 
@@ -148,7 +164,7 @@ app.get('/api/admin/orders', async (req, res) => {
   try {
     await requireAdmin(req);
     const statut = String(req.query.statut || 'attente');
-    let q = supaAdmin.from('orders').select('*').order('created_at', { ascending: false }).limit(50);
+    let q = supaAdmin.from('orders').select('id,ref,user_id,pseudo,amount_fcfa,jours,status,ocr_text,ocr_confidence,created_at,validated_at').order('created_at', { ascending: false }).limit(50);
     if (statut === 'attente') q = q.in('status', ['pending', 'manual_pending']);
     else if (statut !== 'toutes') q = q.eq('status', statut);
     const { data } = await q;
