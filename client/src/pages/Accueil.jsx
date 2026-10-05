@@ -230,11 +230,21 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [suiviId, bus.length]);
 
+  // Coordonnées de mon arrêt (profil) pour ETA d'arrivée
+  const arretsVille = {};
+  lignesVille.forEach(([, l]) => l.arrets.forEach((a) => { arretsVille[a.nom] = a; }));
+  const monArret = arretsVille[localStorage.getItem('mon-arret') || ''] || null;
+
   const copierLien = async (b) => {
     try {
       await navigator.clipboard.writeText(`${location.origin}/?bus=${b.id}`);
       alert('Lien de suivi copié 🔗 Envoie-le à tes amis !');
     } catch { alert(`${location.origin}/?bus=${b.id}`); }
+  };
+
+  const partagerWhatsApp = (b) => {
+    const txt = encodeURIComponent(`🚌 Suis mon bus ${b.ligne} en direct sur KonabMap : ${location.origin}/?bus=${b.id}`);
+    window.open(`https://wa.me/?text=${txt}`, '_blank');
   };
 
   const alerter = (b, distTxt) => {
@@ -366,6 +376,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
             const proche = d !== null && d < 800;
             if (proche) alerter(b, formatDist(d));
             const age = b.updatedAt ? Math.max(0, Math.round((Date.now() - b.updatedAt) / 1000)) : null;
+            const etaArret = monArret ? formatEta(distanceM(b.lat, b.lng, monArret.lat, monArret.lng)) : null;
             return (
               <div key={b.id} className={'bus-item' + (proche ? ' proche' : '')}>
                 <span style={{ display: 'inline-block', width: 12, height: 12, borderRadius: '50%', background: LIGNES[b.ligne]?.couleur || '#009639', marginRight: 6 }}></span>
@@ -374,10 +385,12 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
                 📏 {d === null ? '—' : formatDist(d)} • ⏱️ {d === null ? '—' : formatEta(d)}
                 {b.vitesse > 1 ? ` • ${Math.round(b.vitesse * 3.6)} km/h` : ''}
                 {age !== null ? (age < 8 ? ' • 🟢 en direct' : ` • maj il y a ${age}s`) : ''}<br />
+                {etaArret && monArret && <span>🚏 Arrive à <b>{monArret.nom}</b> dans ~<b>{etaArret}</b><br /></span>}
                 <small>{AFFL[b.affluence] || ''}{b.destination ? ` • ↓ ${b.destination}` : ''}</small>
                 <div className="row" style={{ marginTop: 6 }}>
                   <button className="btn secondary" style={{ marginTop: 0 }} onClick={() => voir(b)}>Voir</button>
                   <button className="btn secondary" style={{ marginTop: 0 }} onClick={() => copierLien(b)}>🔗 Lien</button>
+                  <button className="btn secondary" style={{ marginTop: 0 }} onClick={() => partagerWhatsApp(b)}>💬 WhatsApp</button>
                   <button className="btn secondary" style={{ marginTop: 0 }} onClick={() => signaler(b)}>⚠️ Souci</button>
                 </div>
               </div>
