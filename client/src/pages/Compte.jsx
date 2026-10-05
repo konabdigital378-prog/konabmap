@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supa, saveProfil } from '../supabase.js';
+import { supa, saveProfil, fetchHoraires } from '../supabase.js';
 import { VILLES, LIGNES } from '../data.js';
 import { niveauContributeur } from '../lib.js';
 
@@ -18,7 +18,7 @@ function erreurAmicale(e, setMsg, setCooldown) {
   else setMsg('Erreur : ' + m, true);
 }
 
-export default function Compte({ session, onSession, isPremium, goPremium }) {
+export default function Compte({ session, onSession, isPremium, goPremium, connecte }) {
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
   const [msg, setMsg] = useState(['', false]);
@@ -180,7 +180,39 @@ export default function Compte({ session, onSession, isPremium, goPremium }) {
       )}
       {session && <Historique isPremium={isPremium} goPremium={goPremium} />}
       {session && <MesNotifications />}
+      <Diagnostic connecte={connecte} />
     </div>
+  );
+}
+
+function Diagnostic({ connecte }) {
+  const [base, setBase] = useState(null);
+  const [gps, setGps] = useState('Non testé');
+  useEffect(() => {
+    (async () => {
+      try {
+        await fetchHoraires();
+        const cfg = await fetch('/api/config').then((r) => r.json());
+        setBase(cfg && cfg.prix ? 'OK' : 'Partiel');
+      } catch { setBase('Hors-ligne'); }
+    })();
+  }, []);
+  const testerGps = () => {
+    if (!navigator.geolocation) return setGps('Non supporté');
+    setGps('Localisation…');
+    navigator.geolocation.getCurrentPosition(
+      (p) => setGps(`OK (${p.coords.latitude.toFixed(3)}, ${p.coords.longitude.toFixed(3)})`),
+      () => setGps('Refusé — autorise le GPS'),
+      { timeout: 10000 }
+    );
+  };
+  const dot = (ok) => (ok === true ? '🟢' : ok === false ? '🔴' : '🟡');
+  return (
+    <section className="card">
+      <h2>🛠️ État du service</h2>
+      <p className="hint">{dot(navigator.onLine !== false)} Internet • {dot(connecte)} Temps réel • {dot(base === 'OK')} Données ({base || '…'})</p>
+      <p className="hint">📍 GPS : {gps} <button className="btn secondary" style={{ width: 'auto', marginTop: 4, padding: '6px 14px' }} onClick={testerGps}>Tester</button></p>
+    </section>
   );
 }
 

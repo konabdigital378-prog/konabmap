@@ -45,7 +45,10 @@ export default function Trajet({ ville, onVoir }) {
         <select value={arr} onChange={(e) => setArr(e.target.value)}>
           {arrets.map((n) => <option key={n} value={n}>{n}</option>)}
         </select>
-        <button className="btn primary" onClick={chercher}>Chercher</button>
+        <div className="row">
+          <button className="btn primary" style={{ marginTop: 10 }} onClick={chercher}>Chercher</button>
+          <button className="btn secondary" style={{ marginTop: 10 }} onClick={() => { setDep(arr); setArr(dep); setRes(null); }} title="Inverser">🔄</button>
+        </div>
         <div id="resultat-itineraire">          {res && res.directes && res.directes.map(([c, l]) => {
             const duree = dureeTrajet(l, dep, arr);
             return (

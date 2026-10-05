@@ -55,7 +55,14 @@ export default function Lignes({ ville, onVoir, isPremium, goPremium, bus }) {
   const query = q.toLowerCase();
   const lignes = Object.entries(LIGNES)
     .filter(([, l]) => (l.ville || 'Ouagadougou') === ville)
-    .filter(([c, l]) => !query || (c + ' ' + l.nom + ' ' + (l.detail || '') + ' ' + l.arrets.map((a) => a.nom).join(' ')).toLowerCase().includes(query));
+    .filter(([c, l]) => !query || (c + ' ' + l.nom + ' ' + (l.detail || '') + ' ' + l.arrets.map((a) => a.nom).join(' ')).toLowerCase().includes(query))
+    .sort((a, b) => {
+      const fa = favs.includes(a[0]) ? 0 : 1, fb = favs.includes(b[0]) ? 0 : 1;
+      if (fa !== fb) return fa - fb;
+      const da = (enDirect[a[0]] || 0) > 0 ? 0 : 1, db = (enDirect[b[0]] || 0) > 0 ? 0 : 1;
+      if (da !== db) return da - db;
+      return a[0].localeCompare(b[0]);
+    });
 
   return (
     <div className="page" id="page-lignes">
