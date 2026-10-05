@@ -147,8 +147,10 @@ app.post('/api/engage', async (req, res) => {
     if (!code) throw new Error('Entre ton code');
     const { data: rows } = await supaAdmin.from('promo_codes').select('*').eq('code', code).limit(1);
     const promo = rows?.[0];
-    if (!promo || promo.used_by) throw new Error('Code invalide ou déjà utilisé');
-    await supaAdmin.from('promo_codes').update({ used_by: user.id, used_at: new Date().toISOString() }).eq('code', code);
+    if (!promo) throw new Error('Code invalide');
+    if (promo.consomme_le) throw new Error('Code déjà utilisé');
+    if (promo.used_by && promo.used_by !== user.id) throw new Error('Code déjà attribué à un autre compte');
+    await supaAdmin.from('promo_codes').update({ used_by: user.id, used_at: promo.used_at || new Date().toISOString(), consomme_le: new Date().toISOString() }).eq('code', code);
     const fin = await activerPremium(user.id, promo.jours);
     res.json({ jours: promo.jours, fin });
   } catch (e) { res.status(e.status || 500).json({ message: e.message }); }
