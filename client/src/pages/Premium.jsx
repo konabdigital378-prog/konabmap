@@ -24,7 +24,7 @@ export function usePremium() {
   return { premium, refreshPremium: refresh };
 }
 
-export default function Premium({ onPremium }) {
+export default function Premium({ onPremium, onCompte, session }) {
   const { premium, refreshPremium } = usePremium();
   const [merchant, setMerchant] = useState('...');
   const [prix, setPrix] = useState(100);
@@ -143,6 +143,9 @@ export default function Premium({ onPremium }) {
           <button className="btn primary" style={{ background: '#FEDD00', color: '#3a2b00' }} disabled={busy} onClick={commander}>
             {busy ? '…' : `Activer pour ${prix} FCFA`}
           </button>
+        )}
+        {!session && (
+          <p>👆 <b>Étapes :</b> 1️⃣ crée ton compte <button className="btn secondary" onClick={onCompte}>Aller à Compte</button> 2️⃣ reviens ici payer 100F</p>
         )}
       </section>
 

@@ -19,6 +19,7 @@ export default function App() {
   });
   const [session, setSession] = useState(null);
   const [isPremium, setIsPremium] = useState(false);
+  const [pret, setPret] = useState(false);
   const [admin, setAdmin] = useState(false);
   const [profil, setProfil] = useState(() => ({
     pseudo: localStorage.getItem('pseudo') || '',
@@ -76,6 +77,7 @@ export default function App() {
       setAdmin(false);
       setIsPremium(false);
     }
+    setPret(true);
     if (pseudo && ville) {
       setProfil({ pseudo, ville });
       montrerBienvenue(pseudo, ville, retour);
@@ -182,9 +184,8 @@ export default function App() {
 
   const busVille = busAll.filter((b) => !b.ville || b.ville === profil.ville);
 
-  // Abonnement obligatoire : sans pass actif (et non admin), seul Premium/Compte accessibles
-  const profilComplet = !!localStorage.getItem('universite');
-  const bloque = !!session && profilComplet && !isPremium && !admin;
+  // Abonnement obligatoire : sans pass actif (et non admin), seuls Premium/Compte accessibles
+  const bloque = pret && !isPremium && !admin;
   const pageAffichee = bloque && page !== 'compte' ? 'premium' : page;
 
   const installer = async () => {
@@ -219,7 +220,7 @@ export default function App() {
         {pageAffichee === 'lignes' && <Lignes ville={profil.ville} onVoir={voirLigne} isPremium={isPremium} goPremium={goPremium} bus={busVille} />}
         {pageAffichee === 'trajet' && <Trajet ville={profil.ville} onVoir={voirLigne} />}
         {pageAffichee === 'compte' && <Compte session={session} onSession={refreshSession} isPremium={isPremium} goPremium={goPremium} />}
-        {pageAffichee === 'premium' && <Premium onPremium={() => refreshSession()} />}
+        {pageAffichee === 'premium' && <Premium onPremium={() => refreshSession()} onCompte={() => { setPage('compte'); window.scrollTo({ top: 0 }); }} session={session} />}
         </Suspense>
         {pageAffichee === 'admin' && (admin ? <Admin ville={profil.ville} /> : (
           <div className="page"><section className="card"><p className="hint">🔒 Réservé aux administrateurs.</p></section></div>
