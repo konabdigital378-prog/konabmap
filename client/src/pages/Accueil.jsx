@@ -15,7 +15,10 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
   const [ligne, setLigne] = useState('');
   const [affluence, setAffluence] = useState('places');
   const [destination, setDestination] = useState('');
+  const [note, setNote] = useState('');
   const [jeSuisChauffeur, setJeSuisChauffeur] = useState(false);
+  const trailRef = useRef([]);
+  const trailLine = useRef(null);
   const [partage, setPartage] = useState(false);
   const [favsOnly, setFavsOnly] = useState(false);
   const [alertesFavs, setAlertesFavs] = useState(false);
@@ -166,7 +169,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
         html: `<div class="bus-pin${frais ? ' live' : ''}" style="--c:${couleur}"><span>🚌</span><b>${esc(b.ligne)}</b><i style="background:${affColor}"></i></div>`,
         iconSize: [78, 34], iconAnchor: [39, 17],
       });
-      const popup = `<div class="bus-pop"><b>🚌 Bus ${esc(b.ligne)}</b>${b.chauffeur ? ' ✔️🚍' : b.chauffeur_self ? ' 🚍' : ''}<br>Par ${esc(b.pseudo)}${b.destination ? `<br>↓ ${esc(b.destination)}` : ''}${b.signalements > 0 ? `<br>⚠️ ${b.signalements} signalement(s)` : ''}</div>`;
+      const popup = `<div class="bus-pop"><b>🚌 Bus ${esc(b.ligne)}</b>${b.chauffeur ? ' ✔️🚍' : b.chauffeur_self ? ' 🚍' : ''}<br>Par ${esc(b.pseudo)}${b.destination ? `<br>↓ ${esc(b.destination)}` : ''}${b.note ? `<br>💬 ${esc(b.note)}` : ''}${b.signalements > 0 ? `<br>⚠️ ${b.signalements} signalement(s)` : ''}</div>`;
       if (!busMarkers.current[b.id]) {
         busMarkers.current[b.id] = L.marker([b.lat, b.lng], { icon }).addTo(map).bindPopup(popup);
       } else {
@@ -194,7 +197,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
           (pos) => {
             const payload = {
               pseudo: pseudo(), ligne, ville, affluence, destination,
-              chauffeur_self: jeSuisChauffeur,
+              chauffeur_self: jeSuisChauffeur, note: note.trim().slice(0, 80),
               lat: pos.coords.latitude, lng: pos.coords.longitude,
               vitesse: pos.coords.speed || 0,
             };
@@ -260,8 +263,17 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
   // Bus suivi via lien partagé : on le centre + alerte arrivée à mon arrêt
   const arriveeSignalee = useRef(false);
   useEffect(() => {
-    if (!suiviId) arriveeSignalee.current = false;
-    if (busSuivi && mapObj.current && suiviGPS) mapObj.current.setView([busSuivi.lat, busSuivi.lng], 15);
+    if (!suiviId) { arriveeSignalee.current = false; trailRef.current = []; }
+    if (trailLine.current) { trailLine.current.remove(); trailLine.current = null; }
+    if (busSuivi && mapObj.current) {
+      if (suiviGPS) mapObj.current.setView([busSuivi.lat, busSuivi.lng], 15);
+      // Trace du parcours (40 derniers points)
+      const pts = [...trailRef.current, [busSuivi.lat, busSuivi.lng]].slice(-40);
+      trailRef.current = pts;
+      if (pts.length > 1) {
+        trailLine.current = L.polyline(pts, { color: '#1a73e8', weight: 4, opacity: 0.8, dashArray: '8 6' }).addTo(mapObj.current);
+      }
+    }
     if (busSuivi && monArret && !arriveeSignalee.current) {
       const d = distanceM(busSuivi.lat, busSuivi.lng, monArret.lat, monArret.lng);
       if (d < 800) {
@@ -392,6 +404,8 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
           {(LIGNES[ligne]?.arrets || []).map((a) => <option key={a.nom} value={a.nom}>{a.nom}</option>)}
         </select>
         <label><input type="checkbox" checked={jeSuisChauffeur} onChange={(e) => setJeSuisChauffeur(e.target.checked)} /> 🚍 Je suis le chauffeur de ce bus</label>
+        <label>Note pour les autres (optionnel)</label>
+        <input value={note} onChange={(e) => setNote(e.target.value.slice(0, 80))} placeholder="Ex : climatisé, départ dans 5 min..." />
         <div className="row">
           {!partage ? (
             <button className="btn share" onClick={demarrer}>🟢 Je suis DANS le bus<br /><small>Partager ma position</small></button>
@@ -451,7 +465,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
                 {aArret ? ' • 🅿️ à l’arrêt' : ` • ${Math.round(b.vitesse * 3.6)} km/h`}
                 {age !== null ? (age < 8 ? ' • 🟢 en direct' : ` • maj il y a ${age}s`) : ''}<br />
                 {etaArret && monArret && <span>🚏 Arrive à <b>{monArret.nom}</b> dans ~<b>{etaArret}</b><br /></span>}
-                <small>{AFFL[b.affluence] || ''}{b.destination ? ` • ↓ ${b.destination}` : ''}</small>
+                <small>{AFFL[b.affluence] || ''}{b.destination ? ` • ↓ ${b.destination}` : ''}{b.note ? ` • 💬 ${b.note}` : ''}</small>
                 <div className="row" style={{ marginTop: 6 }}>
                   <button className="btn secondary" style={{ marginTop: 0 }} onClick={() => voir(b)}>Voir</button>
                   <button className="btn secondary" style={{ marginTop: 0 }} onClick={() => copierLien(b)}>🔗 Lien</button>

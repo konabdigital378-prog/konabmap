@@ -2,6 +2,8 @@ import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
 import Splash from './components/Splash.jsx';
 import BottomNav from './components/BottomNav.jsx';
 import Accueil from './pages/Accueil.jsx';
+import { VILLES } from './data.js';
+import { distanceM } from './lib.js';
 const Lignes = lazy(() => import('./pages/Lignes.jsx'));
 const Trajet = lazy(() => import('./pages/Trajet.jsx'));
 const Compte = lazy(() => import('./pages/Compte.jsx'));
@@ -32,6 +34,7 @@ export default function App() {
   const [installEvt, setInstallEvt] = useState(null);
   const [focusLigne, setFocusLigne] = useState('');
   const [suiviId, setSuiviId] = useState('');
+  const [villeSuggeree, setVilleSuggeree] = useState('');
   const sessionRef = useRef(null);
   sessionRef.current = session;
 
@@ -134,7 +137,22 @@ export default function App() {
   useEffect(() => {
     if (!navigator.geolocation) return;
     const id = navigator.geolocation.watchPosition(
-      (p) => setUserPos({ lat: p.coords.latitude, lng: p.coords.longitude }),
+      (p) => {
+        setUserPos({ lat: p.coords.latitude, lng: p.coords.longitude });
+        // Suggère la ville la plus proche si différente (1 fois, >80 km)
+        const villeActuelle = localStorage.getItem('ville');
+        if (!sessionStorage.getItem('villeSugg')) {
+          let best = null, bestD = Infinity;
+          for (const [v, info] of Object.entries(VILLES)) {
+            const d = distanceM(p.coords.latitude, p.coords.longitude, info.centre[0], info.centre[1]);
+            if (d < bestD) { bestD = d; best = v; }
+          }
+          if (best && best !== villeActuelle && bestD > 80000) {
+            sessionStorage.setItem('villeSugg', '1');
+            setVilleSuggeree(best);
+          }
+        }
+      },
       () => setUserPos((u) => u || { lat: 12.368, lng: -1.519 }),
       { enableHighAccuracy: true }
     );
@@ -209,6 +227,19 @@ export default function App() {
       </header>
 
       {banner && <div id="alerte">{banner}</div>}
+      {villeSuggeree && (
+        <div id="alerte">
+          📍 Tu sembles être à {villeSuggeree} !
+          <button className="btn secondary" style={{ width: 'auto', marginLeft: 8, padding: '6px 14px' }} onClick={() => {
+            localStorage.setItem('ville', villeSuggeree);
+            localStorage.removeItem('universite');
+            setProfil((p) => ({ ...p, ville: villeSuggeree }));
+            setVilleSuggeree('');
+            setPage('compte');
+          }}>Changer</button>
+          <button className="btn secondary" style={{ width: 'auto', marginLeft: 8, padding: '6px 14px' }} onClick={() => setVilleSuggeree('')}>Non</button>
+        </div>
+      )}
       {bloque && <div id="alerte">💎 Abonnement requis (100 FCFA/30j) pour utiliser les services — active ton pass ci-dessous 👇</div>}
       {bienvenue && (
         <div id="bienvenue"><img src="logo.png" alt="" /><span>{bienvenue}</span></div>

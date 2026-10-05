@@ -51,6 +51,20 @@ export function parler(texte) {
   } catch { /* ignore */ }
 }
 
+// Réseau d'abord, cache local en secours (hors-ligne)
+export async function avecCache(cle, fetcher) {
+  try {
+    const d = await fetcher();
+    try { localStorage.setItem(cle, JSON.stringify({ t: Date.now(), d })); } catch { /* ignore */ }
+    return d;
+  } catch {
+    try {
+      const c = JSON.parse(localStorage.getItem(cle) || 'null');
+      return c?.d ?? null;
+    } catch { return null; }
+  }
+}
+
 // Heure de pointe scolaire Ouaga (lun–sam) : 6h30–9h et 16h30–19h30
 export function estHeurePointe() {
   const n = new Date();

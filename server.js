@@ -370,6 +370,7 @@ io.on('connection', (socket) => {
       ville: String((data.ville || 'Ouagadougou')).slice(0, 30),
       affluence: ['places', 'debout', 'plein'].includes(data.affluence) ? data.affluence : 'places',
       destination: String((data.destination || '')).slice(0, 60),
+      note: String((data.note || '')).slice(0, 80),
       signalements: prev?.signalements || 0,
       chauffeur: prev?.chauffeur ?? null,
       chauffeur_self: data.chauffeur_self === true,

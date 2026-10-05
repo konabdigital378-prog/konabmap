@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { avecCache } from './lib.js';
 
 const URL = localStorage.getItem('supa_url') || 'https://cyrkhrdjeztcjcwzsszg.supabase.co';
 const KEY = localStorage.getItem('supa_key') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5cmtocmRqZXp0Y2pjd3pzc3pnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExNDQ5ODcsImV4cCI6MjEwNjcyMDk4N30.rBm983A6GSWaUBFSozILGsgbZXQFCqeelyPE_EtcsiM';
@@ -48,10 +49,13 @@ export async function listUsers() {  const { data } = await supa.from('profils')
 }
 
 export async function fetchHoraires() {
-  const { data } = await supa.from('horaires').select('*');
-  const map = {};
-  (data || []).forEach((h) => { map[h.ligne] = h; });
-  return map;
+  return (await avecCache('cache_horaires', async () => {
+    const { data, error } = await supa.from('horaires').select('*');
+    if (error) throw error;
+    const map = {};
+    (data || []).forEach((h) => { map[h.ligne] = h; });
+    return map;
+  })) || {};
 }
 
 export async function moyennesAvis() {
@@ -75,10 +79,13 @@ export async function noterLigne(ligne, note) {
 }
 
 export async function fetchDeparts(ville) {
-  let q = supa.from('departs').select('*').order('heure');
-  if (ville) q = q.eq('ville', ville);
-  const { data } = await q.limit(2000);
-  return data || [];
+  return (await avecCache('cache_departs_' + (ville || 'toutes'), async () => {
+    let q = supa.from('departs').select('*').order('heure');
+    if (ville) q = q.eq('ville', ville);
+    const { data, error } = await q.limit(2000);
+    if (error) throw error;
+    return data || [];
+  })) || [];
 }
 
 export async function demanderVille(ville, pseudo) {
