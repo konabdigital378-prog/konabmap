@@ -100,10 +100,11 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
   }, [grandeCarte]);
 
   // Lignes de la ville
+  const villePrec = useRef(ville);
   useEffect(() => {
     const map = mapObj.current;
     if (!map) return;
-    clearFocus();
+    if (villePrec.current !== ville) { villePrec.current = ville; clearFocus(); }
     lignesLayer.current.clearLayers();
     const v = VILLES[ville] || VILLES['Ouagadougou'];
     map.setView(v.centre, v.zoom);
@@ -131,6 +132,19 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
     const map = mapObj.current;
     if (!map) return;
     highlightLayer.current.clearLayers();
+    // Arrêt précis demandé depuis la page Lignes ?
+    try {
+      const fa = JSON.parse(localStorage.getItem('focusArret') || 'null');
+      if (fa && fa.code === ligneFocus && LIGNES[fa.code]) {
+        const a = LIGNES[fa.code].arrets.find((x) => x.nom === fa.nom);
+        if (a) {
+          L.circleMarker([a.lat, a.lng], { radius: 12, color: '#FEDD00', weight: 4 }).addTo(highlightLayer.current);
+          map.setView([a.lat, a.lng], 16);
+          localStorage.removeItem('focusArret');
+          return;
+        }
+      }
+    } catch { /* ignore */ }
     if (ligneFocus && LIGNES[ligneFocus]) {
       const l = LIGNES[ligneFocus];
       const latlngs = l.arrets.map((a) => [a.lat, a.lng]);

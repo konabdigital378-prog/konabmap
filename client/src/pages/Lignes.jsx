@@ -92,7 +92,10 @@ export default function Lignes({ ville, onVoir, isPremium, goPremium, bus }) {
                 ) : (
                   <p className="hint">🕒 Horaires en cours de saisie par l'admin.</p>
                 )}
-                <ul>{l.arrets.map((a) => <li key={a.nom}>{a.nom}</li>)}</ul>
+                <ul>{l.arrets.map((a) => <li key={a.nom} style={{ cursor: 'pointer' }} title="Localiser sur la carte" onClick={() => {
+                  localStorage.setItem('focusArret', JSON.stringify({ code: c, nom: a.nom }));
+                  onVoir(c);
+                }}>📍 {a.nom}</li>)}</ul>
                 <p>
                   <small>Noter : {avis[c] ? `★ ${avis[c].moy.toFixed(1)} (${avis[c].n}) ` : 'pas encore notée '}</small>
                   {[1, 2, 3, 4, 5].map((n) => (

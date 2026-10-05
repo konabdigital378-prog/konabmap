@@ -32,6 +32,7 @@ export default function App() {
   const [busAll, setBusAll] = useState([]);
   const [userPos, setUserPos] = useState(null);
   const [installEvt, setInstallEvt] = useState(null);
+  const [enLigne, setEnLigne] = useState(() => navigator.onLine !== false);
   const [focusLigne, setFocusLigne] = useState('');
   const [suiviId, setSuiviId] = useState('');
   const [villeSuggeree, setVilleSuggeree] = useState('');
@@ -107,8 +108,20 @@ export default function App() {
       setBusAll(b);
       try { localStorage.setItem('lastBus', JSON.stringify({ t: Date.now(), bus: b })); } catch { /* ignore */ }
     };
+    const off = () => setEnLigne(false);
+    const on = () => setEnLigne(true);
     socket.on('bus-list', h);
-    return () => socket.off('bus-list', h);
+    socket.on('disconnect', off);
+    socket.on('connect', on);
+    window.addEventListener('offline', off);
+    window.addEventListener('online', on);
+    return () => {
+      socket.off('bus-list', h);
+      socket.off('disconnect', off);
+      socket.off('connect', on);
+      window.removeEventListener('offline', off);
+      window.removeEventListener('online', on);
+    };
   }, []);
 
   // Abonnement push Web (notifications même app fermée)
@@ -227,6 +240,7 @@ export default function App() {
       </header>
 
       {banner && <div id="alerte">{banner}</div>}
+      {!enLigne && <div id="alerte">📶 Hors-ligne — positions affichées en cache, reconnexion auto…</div>}
       {villeSuggeree && (
         <div id="alerte">
           📍 Tu sembles être à {villeSuggeree} !
