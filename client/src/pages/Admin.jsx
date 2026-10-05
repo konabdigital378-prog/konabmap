@@ -7,6 +7,7 @@ const ONGLETS = [
   { id: 'horaires', emoji: '🕒', label: 'Horaires' },
   { id: 'commandes', emoji: '💰', label: 'Commandes' },
   { id: 'users', emoji: '👥', label: 'Étudiants' },
+  { id: 'villes', emoji: '🇧🇫', label: 'Villes' },
   { id: 'messages', emoji: '📢', label: 'Messages' },
   { id: 'codes', emoji: '🎟️', label: 'Codes' },
 ];
@@ -28,6 +29,7 @@ export default function Admin({ ville }) {
   const [horaires, setHoraires] = useState({});
   const [editH, setEditH] = useState({});
   const [departs, setDeparts] = useState([]);
+  const [demandes, setDemandes] = useState([]);
   const [depLigne, setDepLigne] = useState('');
   const [depTerminus, setDepTerminus] = useState('');
   const [depJours, setDepJours] = useState('sem');
@@ -51,6 +53,10 @@ export default function Admin({ ville }) {
       setHoraires(await fetchHoraires().catch(() => ({})));
       const { data: deps } = await supa.from('departs').select('*').eq('ville', ville).order('ligne').order('heure').limit(1000);
       setDeparts(deps || []);
+      const { data: dem } = await supa.from('ville_demandes').select('ville').limit(1000);
+      const m = {};
+      (dem || []).forEach((d) => { m[d.ville] = (m[d.ville] || 0) + 1; });
+      setDemandes(Object.entries(m).sort((a, b) => b[1] - a[1]));
       if (!depLigne) {
         const lv = Object.entries(LIGNES).filter(([, l]) => (l.ville || 'Ouagadougou') === ville);
         if (lv.length > 0) setDepLigne(lv[0][0]);
@@ -329,6 +335,19 @@ export default function Admin({ ville }) {
               </div>
             ))}
             {usersFiltres.length === 0 && <p className="hint">Aucun inscrit.</p>}
+          </>
+        )}
+
+        {onglet === 'villes' && (
+          <>
+            <p className="hint">Villes demandées par les étudiants (prochaines extensions SOTRACO).</p>
+            {demandes.map(([v, n]) => (
+              <div key={v} className="hist-item">
+                <span>🇧🇫 <b>{v}</b></span>
+                <small>{n} demande(s)</small>
+              </div>
+            ))}
+            {demandes.length === 0 && <p className="hint">Aucune demande pour l'instant.</p>}
           </>
         )}
 

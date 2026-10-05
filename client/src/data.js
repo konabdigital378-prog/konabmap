@@ -388,9 +388,55 @@ export const LIGNES = {
         "lng": -1.505
       },
       {
-        "nom": "Belle ville Watinoma",
-        "lat": 12.3,
-        "lng": -1.52
+        "nom": "Terminus Naba Koom",
+        "lat": 12.368,
+        "lng": -1.519
+      }
+    ],
+    "ville": "Ouagadougou"
+  },
+  "SAPONE": {
+    "nom": "Inter - Ouaga ↔ Saponé",
+    "couleur": "#006600",
+    "detail": "Marché Saponé - Patte d'Oie - Naba Koom. Ligne intercommunale officielle (élèves, étudiants, commerçants).",
+    "arrets": [
+      {
+        "nom": "Marché Saponé",
+        "lat": 12.011,
+        "lng": -1.572
+      },
+      {
+        "nom": "Rond-point Patte d'Oie",
+        "lat": 12.336,
+        "lng": -1.526
+      },
+      {
+        "nom": "Terminus Naba Koom",
+        "lat": 12.368,
+        "lng": -1.519
+      }
+    ],
+    "ville": "Ouagadougou"
+  },
+  "PABRE": {
+    "nom": "Inter - Mémorial Thomas Sankara ↔ Pabré",
+    "couleur": "#990000",
+    "detail": "Mémorial Thomas Sankara - Échangeur du Nord - Mosquée de Pabré.",
+    "arrets": [
+      {
+        "nom": "Mémorial Thomas Sankara",
+        "lat": 12.377,
+        "lng": -1.508
+      },
+      {
+        "nom": "Échangeur du Nord",
+        "lat": 12.388,
+        "lng": -1.557
+      },
+      {
+        "nom": "Mosquée de Pabré",
+        "lat": 12.557,
+        "lng": -1.651
       }
     ],
     "ville": "Ouagadougou"

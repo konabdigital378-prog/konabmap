@@ -32,6 +32,18 @@ export function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
+// Annonce vocale (français) — accessibilité, téléphones partagés
+export function parler(texte) {
+  try {
+    if (localStorage.getItem('voix') !== 'oui') return;
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(texte);
+    u.lang = 'fr-FR';
+    window.speechSynthesis.speak(u);
+  } catch { /* ignore */ }
+}
+
 const toMin = (s) => {
   const [a, b] = String(s || '06:00').split(':').map(Number);
   return a * 60 + b;

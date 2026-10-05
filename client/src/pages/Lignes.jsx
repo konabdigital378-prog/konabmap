@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react';
 import { LIGNES } from '../data.js';
 import { getFavs, prochainsDeparts, prochainsExacts, statutHoraire, typeJour } from '../lib.js';
-import { fetchHoraires, fetchDeparts } from '../supabase.js';
+import { fetchHoraires, fetchDeparts, demanderVille, topDemandes } from '../supabase.js';
 
 export default function Lignes({ ville, onVoir, isPremium, goPremium }) {
   const [q, setQ] = useState('');
   const [favs, setFavs] = useState(getFavs());
   const [horaires, setHoraires] = useState({});
   const [departs, setDeparts] = useState({});
+  const [demandes, setDemandes] = useState([]);
+  const [nouvelleVille, setNouvelleVille] = useState('');
   const [, tick] = useState(0);
+
+  const chargerDemandes = () => topDemandes().then(setDemandes).catch(() => {});
 
   useEffect(() => {
     fetchHoraires().then(setHoraires).catch(() => {});
@@ -17,10 +21,21 @@ export default function Lignes({ ville, onVoir, isPremium, goPremium }) {
       d.forEach((x) => { if (!g[x.ligne]) g[x.ligne] = []; g[x.ligne].push(x); });
       setDeparts(g);
     }).catch(() => {});
+    chargerDemandes();
     const iv = setInterval(() => tick((n) => n + 1), 60000);
     return () => clearInterval(iv);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ville]);
+
+  const proposer = async () => {
+    if (!nouvelleVille.trim()) return;
+    try {
+      await demanderVille(nouvelleVille, localStorage.getItem('pseudo'));
+      setNouvelleVille('');
+      chargerDemandes();
+      alert('Merci ! Ta ville est proposée 🗳️');
+    } catch (e) { alert(e.message || 'Connecte-toi pour proposer'); }
+  };
 
   const toggleFav = (code) => {
     if (!favs.includes(code) && favs.length >= 3 && !isPremium) {
@@ -81,6 +96,17 @@ export default function Lignes({ ville, onVoir, isPremium, goPremium }) {
           {lignes.length === 0 && <p className="hint">Aucune ligne trouvée.</p>}
         </div>
         <p className="hint">Points majeurs vérifiés OpenStreetMap, arrêts intermédiaires indicatifs.</p>
+      </section>
+
+      <section className="card">
+        <h2>🗳️ Ma ville n'y est pas ?</h2>
+        <div className="row">
+          <input value={nouvelleVille} onChange={(e) => setNouvelleVille(e.target.value)} placeholder="Ex : Kaya, Banfora..." />
+          <button className="btn primary" style={{ width: 'auto', marginTop: 0 }} onClick={proposer}>Proposer</button>
+        </div>
+        {demandes.length > 0 && (
+          <p className="hint">Villes demandées : {demandes.map(([v, n]) => `${v} (${n})`).join(' • ')}</p>
+        )}
       </section>
     </div>
   );

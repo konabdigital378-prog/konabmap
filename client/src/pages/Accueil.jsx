@@ -3,7 +3,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { LIGNES, VILLES } from '../data.js';
 import { socket } from '../socket.js';
-import { distanceM, formatDist, formatEta, getFavs, AFFL, prochainsDeparts, prochainsExacts, esc } from '../lib.js';
+import { distanceM, formatDist, formatEta, getFavs, AFFL, prochainsDeparts, prochainsExacts, esc, parler } from '../lib.js';
 import { shareBusPosition, notify, fetchHoraires, fetchDeparts } from '../supabase.js';
 
 export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocus, isPremium, goPremium }) {
@@ -21,6 +21,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
   const [filtre, setFiltre] = useState('toutes');
   const [recherche, setRecherche] = useState('');
   const [alertSonore, setAlertSonore] = useState(true);
+  const [voix, setVoix] = useState(() => localStorage.getItem('voix') === 'oui');
   const watchId = useRef(null);
   const debutPartage = useRef(null);
   const dejaAlerte = useRef({});
@@ -228,6 +229,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
     if (!isPremium) return; // alertes = Premium
     dejaAlerte.current[b.id] = true;
     notify(`Bus ${b.ligne} proche !`, `À ${distTxt} de toi, prépare-toi !`).catch(() => {});
+    parler(`Bus ${b.ligne} proche, prépare-toi !`);
     setTimeout(() => delete dejaAlerte.current[b.id], 15000);
   };
 
@@ -246,7 +248,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
           <div className="hero-stats">
             <div className="hero-stat">🚌 {bus.length}<small>bus en direct</small></div>
             <div className="hero-stat">🗺️ {lignesVille.length}<small>lignes</small></div>
-            <div className="hero-stat">🎓 {VILLES[ville]?.universites.length || 0}<small>universités</small></div>
+            <div className="hero-stat">🇧🇫 {Object.keys(VILLES).length}<small>villes couvertes</small></div>
           </div>
         </div>
         <img className="hero-photo" src="etudiant.jpg" alt="Étudiant" />
@@ -366,6 +368,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
           setAlertSonore(e.target.checked);
         }} /> M'alerter quand un bus est à moins de 800m 💎</label>
         <label><input type="checkbox" checked={alertesFavs} onChange={(e) => setAlertesFavs(e.target.checked)} /> Alertes seulement pour mes lignes ⭐</label>
+        <label><input type="checkbox" checked={voix} onChange={(e) => { setVoix(e.target.checked); localStorage.setItem('voix', e.target.checked ? 'oui' : 'non'); }} /> 🔊 Annonces vocales (français)</label>
       </section>
     </div>
   );

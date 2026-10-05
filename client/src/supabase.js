@@ -61,6 +61,21 @@ export async function fetchDeparts(ville) {
   return data || [];
 }
 
+export async function demanderVille(ville, pseudo) {
+  const { data: { user } } = await supa.auth.getUser();
+  const { error } = await supa.from('ville_demandes').insert({
+    ville: ville.trim().slice(0, 40), user_id: user?.id || null, pseudo: pseudo || null,
+  });
+  if (error) throw error;
+}
+
+export async function topDemandes() {
+  const { data } = await supa.from('ville_demandes').select('ville');
+  const m = {};
+  (data || []).forEach((d) => { m[d.ville] = (m[d.ville] || 0) + 1; });
+  return Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, 10);
+}
+
 export async function notify(titre, message) {
   try {
     if (Notification.permission === 'default') await Notification.requestPermission();
