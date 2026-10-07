@@ -88,11 +88,35 @@ export async function fetchDeparts(ville) {
   })) || [];
 }
 
-export async function demanderVille(ville, pseudo) {
-  const { data: { user } } = await supa.auth.getUser();
+export async function demanderVille(ville, pseudo) {  const { data: { user } } = await supa.auth.getUser();
   const { error } = await supa.from('ville_demandes').insert({
     ville: ville.trim().slice(0, 40), user_id: user?.id || null, pseudo: pseudo || null,
   });
+  if (error) throw error;
+}
+
+export async function mesRappels() {
+  const { data: { user } } = await supa.auth.getUser();
+  if (!user) return [];
+  const { data, error } = await supa.from('rappels').select('*').eq('user_id', user.id).order('heure');
+  if (error) throw error;
+  return data || [];
+}
+
+export async function ajouterRappel({ ville, ligne, terminus, heure, avance_min }) {
+  const { data: { user } } = await supa.auth.getUser();
+  if (!user) throw new Error('Connecte-toi');
+  const { error } = await supa.from('rappels').insert({ user_id: user.id, ville, ligne, terminus, heure, avance_min });
+  if (error) throw error;
+}
+
+export async function basculeRappel(id, actif) {
+  const { error } = await supa.from('rappels').update({ actif }).eq('id', id);
+  if (error) throw error;
+}
+
+export async function supprimerRappel(id) {
+  const { error } = await supa.from('rappels').delete().eq('id', id);
   if (error) throw error;
 }
 

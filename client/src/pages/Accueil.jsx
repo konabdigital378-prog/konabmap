@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import { LIGNES, VILLES } from '../data.js';
 import { socket } from '../socket.js';
 import { distanceM, formatDist, formatEta, formatEtaVitesse, getFavs, AFFL, prochainsDeparts, prochainsExacts, esc, parler, estHeurePointe } from '../lib.js';
-import { shareBusPosition, notify, fetchHoraires, fetchDeparts } from '../supabase.js';
+import { shareBusPosition, notify, fetchHoraires, fetchDeparts, mesRappels, ajouterRappel, basculeRappel, supprimerRappel } from '../supabase.js';
 
 export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocus, isPremium, goPremium, suiviId, clearSuivi }) {
   const mapRef = useRef(null);
@@ -367,8 +367,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
       )}
 
       <section className="card">
-        <h2>🕒 Prochains départs</h2>
-        {(getFavs().length > 0 ? lignesVille.filter(([c]) => getFavs().includes(c)) : lignesVille.slice(0, 4)).map(([c, l]) => {
+        <h2>🕒 Prochains départs</h2>        {(getFavs().length > 0 ? lignesVille.filter(([c]) => getFavs().includes(c)) : lignesVille.slice(0, 4)).map(([c, l]) => {
           const exacts = prochainsExacts(departs[c] || [], c, 2);
           const termes = Object.entries(exacts);
           const freq = prochainsDeparts(horaires[c]);
@@ -386,6 +385,8 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
           );
         })}
       </section>
+
+      <Rappels ville={ville} lignesVille={lignesVille} departs={departs} />
 
       <div className="map-wrap">
         <div className="carte-outils">
@@ -501,5 +502,99 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
         <label><input type="checkbox" checked={voix} onChange={(e) => { setVoix(e.target.checked); localStorage.setItem('voix', e.target.checked ? 'oui' : 'non'); }} /> 🔊 Annonces vocales (français)</label>
       </section>
     </div>
+  );
+}
+
+function Rappels({ ville, lignesVille, departs }) {
+  const [liste, setListe] = useState([]);
+  const [ligne, setLigne] = useState('');
+  const [terminus, setTerminus] = useState('');
+  const [heure, setHeure] = useState('07:00');
+  const [avance, setAvance] = useState(10);
+
+  const charger = async () => {
+    try { setListe(await mesRappels()); } catch { /* non connecté */ }
+  };
+  useEffect(() => { charger(); }, []);
+
+  // Vérification locale toutes les 30 s (app ouverte)
+  const listeRef = useRef([]);
+  listeRef.current = liste;
+  useEffect(() => {
+    const verif = () => {
+      const now = new Date();
+      const cur = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const jour = now.toISOString().slice(0, 10);
+      (listeRef.current || []).forEach((r) => {
+        if (!r.actif) return;
+        const [a, b] = String(r.heure).split(':').map(Number);
+        const dep = a * 60 + b - (r.avance_min || 10);
+        const al = `${String(Math.floor(((dep + 1440) % 1440) / 60)).padStart(2, '0')}:${String((((dep % 60) + 60) % 60)).padStart(2, '0')}`;
+        const cle = `rappel_${r.id}_${jour}`;
+        if (al === cur && !localStorage.getItem(cle)) {
+          localStorage.setItem(cle, '1');
+          notify(`🚌 ${r.ligne} dans ${r.avance_min || 10} min !`, `Départ ${r.heure} depuis ${r.terminus}.`).catch(() => {});
+          parler(`Ton bus ${r.ligne} part dans ${r.avance_min || 10} minutes !`);
+        }
+      });
+    };
+    const iv = setInterval(verif, 30000);
+    verif();
+    return () => clearInterval(iv);
+  }, []);
+
+  const codes = lignesVille.map(([c]) => c);
+  const ligneChoisie = ligne || codes[0] || '';
+  const terminusPossibles = [...new Set([
+    ...((departs[ligneChoisie] || []).map((d) => d.terminus)),
+    ...((LIGNES[ligneChoisie]?.arrets || []).map((a) => a.nom)),
+  ])];
+  const heuresExactes = [...new Set((departs[ligneChoisie] || []).map((d) => d.heure.slice(0, 5)))].sort();
+
+  const ajouter = async () => {
+    const term = terminus || terminusPossibles[0] || '';
+    if (!ligneChoisie || !term || !heure) return alert('Ligne + terminus + heure requis');
+    try {
+      await ajouterRappel({ ville, ligne: ligneChoisie, terminus: term, heure, avance_min: Number(avance) });
+      setTerminus('');
+      charger();
+      alert(`Rappel activé : ${ligneChoisie} ${heure} depuis ${term} (${avance} min avant) ⏰`);
+    } catch (e) { alert(e.message || 'Connecte-toi pour créer des rappels'); }
+  };
+
+  return (
+    <section className="card">
+      <h2>⏰ Mes rappels de départ</h2>
+      <p className="hint">Sois signalé avant chacun de tes départs (notification + push même app fermée).</p>
+      <label>Ligne</label>
+      <select value={ligneChoisie} onChange={(e) => setLigne(e.target.value)}>
+        {codes.map((c) => <option key={c} value={c}>{c}</option>)}
+      </select>
+      <label>Terminus</label>
+      <select value={terminus} onChange={(e) => setTerminus(e.target.value)}>
+        <option value="">— Choisir —</option>
+        {terminusPossibles.map((t) => <option key={t} value={t}>{t}</option>)}
+      </select>
+      <label>Heure du départ{heuresExactes.length > 0 && <small> (feuille : {heuresExactes.slice(0, 6).join(', ')}{heuresExactes.length > 6 ? '…' : ''})</small>}</label>
+      <input type="time" value={heure} onChange={(e) => setHeure(e.target.value)} />
+      <label>Me prévenir</label>
+      <select value={avance} onChange={(e) => setAvance(e.target.value)}>
+        <option value={5}>5 min avant</option>
+        <option value={10}>10 min avant</option>
+        <option value={15}>15 min avant</option>
+        <option value={30}>30 min avant</option>
+      </select>
+      <button className="btn primary" onClick={ajouter}>+ Ajouter ce rappel</button>
+      {liste.filter((r) => (LIGNES[r.ligne]?.ville || 'Ouagadougou') === ville || r.ville === ville).map((r) => (
+        <div key={r.id} className="hist-item">
+          <span><b>{r.ligne}</b> {r.heure.slice(0, 5)} <small>↓ {r.terminus} (−{r.avance_min} min)</small></span>
+          <span>
+            <button className="btn secondary" style={{ width: 'auto', marginTop: 0, padding: '4px 10px' }} onClick={async () => { await basculeRappel(r.id, !r.actif); charger(); }}>{r.actif ? '⏸️' : '▶️'}</button>{' '}
+            <button className="btn secondary" style={{ width: 'auto', marginTop: 0, padding: '4px 10px' }} onClick={async () => { if (confirm('Supprimer ce rappel ?')) { await supprimerRappel(r.id); charger(); } }}>✕</button>
+          </span>
+        </div>
+      ))}
+      {liste.length === 0 && <p className="hint">Aucun rappel. Ex : L11 à 06:10 depuis INSSA.</p>}
+    </section>
   );
 }

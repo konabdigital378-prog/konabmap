@@ -106,6 +106,31 @@ setInterval(async () => {
   } catch { /* ignore */ }
 }, 10 * 60000);
 
+// Rappels de départs : push à (heure - avance) pour chaque rappel actif, 1 fois/jour
+setInterval(async () => {
+  try {
+    if (!supaAdmin || !webpush) return;
+    const now = new Date();
+    const cur = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const jour = now.toISOString().slice(0, 10);
+    const { data: rappels } = await supaAdmin.from('rappels').select('*').eq('actif', true).limit(2000);
+    for (const r of rappels || []) {
+      const [a, b] = String(r.heure).split(':').map(Number);
+      const depart = a * 60 + b - (r.avance_min || 10);
+      const alerte = `${String(Math.floor(((depart + 1440) % 1440) / 60)).padStart(2, '0')}:${String(((depart % 60) + 60) % 60).padStart(2, '0')}`;
+      if (alerte !== cur) continue;
+      if (r.dernier_envoi && String(r.dernier_envoi).slice(0, 10) === jour) continue;
+      await supaAdmin.from('rappels').update({ dernier_envoi: new Date().toISOString() }).eq('id', r.id);
+      const { data: subs } = await supaAdmin.from('push_subscriptions').select('subscription').eq('user_id', r.user_id).limit(10);
+      const titre = `🚌 ${r.ligne} dans ${r.avance_min || 10} min`;
+      const message = `Départ ${r.heure} depuis ${r.terminus} (${r.ville}). Prépare-toi !`;
+      await Promise.all((subs || []).map((s) =>
+        webpush.sendNotification(s.subscription, JSON.stringify({ titre, message })).catch(() => {})
+      ));
+    }
+  } catch { /* ignore */ }
+}, 60000);
+
 app.get('/api/pay', async (req, res) => {
   try {
     const { user } = await userFrom(req);
