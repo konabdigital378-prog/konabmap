@@ -643,10 +643,10 @@ export const LIGNES = {
     "ville": "Bobo-Dioulasso",
     "nom": "B1 - Belleville ↔ Tiéfo Amoro",
     "couleur": "#009639",
-    "detail": "Cité univ Belleville (CROUB) - Lycée national - BCEAO - CHU Souro Sanou - Tiéfo Amoro",
+    "detail": "Cité U Belle-Ville - Lycée national - BCEAO - CHU Souro Sanou - Tiéfo Amoro. Feuille de marche officielle (horaires exacts).",
     "arrets": [
       {
-        "nom": "Cité Univ Belleville (CROUB)",
+        "nom": "Cité U Belle-Ville",
         "lat": 11.2,
         "lng": -4.27
       },
@@ -672,11 +672,128 @@ export const LIGNES = {
       }
     ]
   },
+  "B1B": {
+    "ville": "Bobo-Dioulasso",
+    "nom": "B1B - Belle-Ville via INSSA ↔ Tiéfo Amoro",
+    "couleur": "#00b44a",
+    "detail": "Belle-Ville via INSSA - Tiéfo Amoro. Feuille de marche officielle (horaires exacts).",
+    "arrets": [
+      { "nom": "Belle-Ville via INSSA", "lat": 11.186, "lng": -4.355 },
+      { "nom": "INSSA", "lat": 11.184, "lng": -4.34 },
+      { "nom": "Place Tiéfo Amoro", "lat": 11.178, "lng": -4.306 }
+    ]
+  },
+  "B2": {
+    "ville": "Bobo-Dioulasso",
+    "nom": "B2 - Station Oryx ↔ Tiéfo Amoro",
+    "couleur": "#EF2D2D",
+    "detail": "Station Oryx rte Ouaga - Tiéfo Amoro. Feuille de marche officielle (horaires exacts).",
+    "arrets": [
+      { "nom": "Station Oryx rte Ouaga", "lat": 11.185, "lng": -4.275 },
+      { "nom": "Place de la femme", "lat": 11.18, "lng": -4.285 },
+      { "nom": "Place Tiéfo Amoro", "lat": 11.178, "lng": -4.306 }
+    ]
+  },
+  "B2B": {
+    "ville": "Bobo-Dioulasso",
+    "nom": "B2B - Yegueresso ↔ Tiéfo Amoro",
+    "couleur": "#ff6600",
+    "detail": "Yegueresso - Tiéfo Amoro. Feuille de marche officielle (horaires exacts).",
+    "arrets": [
+      { "nom": "Yegueresso", "lat": 11.192, "lng": -4.272 },
+      { "nom": "Place Tiéfo Amoro", "lat": 11.178, "lng": -4.306 }
+    ]
+  },
+  "B4": {
+    "ville": "Bobo-Dioulasso",
+    "nom": "B4 - Station Orix ↔ Tiéfo Amoro",
+    "couleur": "#0066cc",
+    "detail": "Station Orix rte Ouaga - Hôtel de ville - Tiéfo Amoro. Feuille de marche officielle (horaires exacts).",
+    "arrets": [
+      { "nom": "Station Orix rte Ouaga", "lat": 11.186, "lng": -4.274 },
+      { "nom": "Hôtel de ville", "lat": 11.178, "lng": -4.29 },
+      { "nom": "Place Tiéfo Amoro", "lat": 11.178, "lng": -4.306 }
+    ]
+  },
+  "B6": {
+    "ville": "Bobo-Dioulasso",
+    "nom": "B6 - Logements sociaux ↔ Tiéfo Amoro",
+    "couleur": "#666600",
+    "detail": "Logements sociaux Ouezzinville - Shell Bindougousso - Tiéfo Amoro. Feuille de marche officielle (horaires exacts).",
+    "arrets": [
+      { "nom": "Logements sociaux", "lat": 11.198, "lng": -4.312 },
+      { "nom": "Shell Bindougousso", "lat": 11.19, "lng": -4.3 },
+      { "nom": "Place Tiéfo Amoro", "lat": 11.178, "lng": -4.306 }
+    ]
+  },
+  "B7": {
+    "ville": "Bobo-Dioulasso",
+    "nom": "B7 - Station Amira Oil ↔ Tiéfo Amoro",
+    "couleur": "#9900cc",
+    "detail": "Station Amira Oil - Tiéfo Amoro. Feuille de marche officielle (horaires exacts).",
+    "arrets": [
+      { "nom": "Station Amira Oil", "lat": 11.19, "lng": -4.28 },
+      { "nom": "Place Tiéfo Amoro", "lat": 11.178, "lng": -4.306 }
+    ]
+  },
+  "B7B": {
+    "ville": "Bobo-Dioulasso",
+    "nom": "B7B - Santidougou ↔ Tiéfo Amoro",
+    "couleur": "#009999",
+    "detail": "CSPS Santidougou - Tiéfo Amoro. Feuille de marche officielle (horaires exacts).",
+    "arrets": [
+      { "nom": "Santidougou", "lat": 11.2, "lng": -4.31 },
+      { "nom": "Place Tiéfo Amoro", "lat": 11.178, "lng": -4.306 }
+    ]
+  },
+  "B9": {
+    "ville": "Bobo-Dioulasso",
+    "nom": "B9 - Marché du 22 ↔ Zone des écoles",
+    "couleur": "#cc0066",
+    "detail": "Marché du 22 - Zone des écoles (Stade Lamizana). Feuille de marche officielle (horaires exacts).",
+    "arrets": [
+      { "nom": "Marché du 22", "lat": 11.185, "lng": -4.295 },
+      { "nom": "Zone des écoles", "lat": 11.17, "lng": -4.3 },
+      { "nom": "Stade Lamizana", "lat": 11.172, "lng": -4.298 }
+    ]
+  },
+  "B10": {
+    "ville": "Bobo-Dioulasso",
+    "nom": "B10 - IRA Samagan ↔ Tiéfo Amoro",
+    "couleur": "#3333cc",
+    "detail": "IRA de Samagan (usine huilerie) - Tiéfo Amoro. Feuille de marche officielle (horaires exacts).",
+    "arrets": [
+      { "nom": "IRA de Samagan", "lat": 11.155, "lng": -4.335 },
+      { "nom": "Place Tiéfo Amoro", "lat": 11.178, "lng": -4.306 }
+    ]
+  },
+  "BBAMA": {
+    "ville": "Bobo-Dioulasso",
+    "nom": "Inter - Bama ↔ Tiéfo Amoro",
+    "couleur": "#660099",
+    "detail": "Mairie de Bama - Tiéfo Amoro. Ligne intercommunale officielle (horaires exacts).",
+    "arrets": [
+      { "nom": "Mairie de Bama", "lat": 11.39, "lng": -4.38 },
+      { "nom": "Place Tiéfo Amoro", "lat": 11.178, "lng": -4.306 }
+    ]
+  },
+  "BNASSO": {
+    "ville": "Bobo-Dioulasso",
+    "nom": "Spéciale Nasso - Total/Place Femme ↔ UNB",
+    "couleur": "#FEDD00",
+    "detail": "LSE 41 + renfort 42 : Total rte Ouaga, Place de la Femme, Medersa Bindougousso ↔ Université Nazi Boni. Jours précisés sur feuille.",
+    "arrets": [
+      { "nom": "Station Total route Ouaga", "lat": 11.185, "lng": -4.275 },
+      { "nom": "Place de la femme", "lat": 11.18, "lng": -4.285 },
+      { "nom": "Medersa Bindougousso", "lat": 11.19, "lng": -4.3 },
+      { "nom": "Université Nazi Boni Nasso", "lat": 11.181, "lng": -4.363 }
+    ]
+  },
   "B5": {
     "ville": "Bobo-Dioulasso",
     "nom": "B5 - Farako Ba ↔ Tiéfo Amoro",
     "couleur": "#EF2D2D",
-    "detail": "Farako Ba - Matourkou - Av Sangoulé Lamizana - Nation - Tiéfo Amoro",
+    "detail": "Farakoba - Matourkou - Av Sangoulé Lamizana - Nation - Tiéfo Amoro. Feuille de marche officielle (horaires exacts).",
     "arrets": [
       {
         "nom": "Farako Ba",
@@ -709,7 +826,7 @@ export const LIGNES = {
     "ville": "Bobo-Dioulasso",
     "nom": "B8 - Djoulankolo ↔ Tiéfo Amoro",
     "couleur": "#0066cc",
-    "detail": "Djoulankolo - ENEP - Maison culture - Nation - Tiéfo Amoro",
+    "detail": "Dioulankolo - ENEP - Maison culture - Nation - Tiéfo Amoro. Feuille de marche officielle (horaires exacts).",
     "arrets": [
       {
         "nom": "Djoulankolo",
@@ -765,7 +882,7 @@ export const LIGNES = {
     "ville": "Bobo-Dioulasso",
     "nom": "B11 - INSSA (Belle Ville) ↔ UCAO",
     "couleur": "#660099",
-    "detail": "INSSA Belle Ville - Marché du 22 - Maison de la culture - UCAO. Feuille de marche officielle SOTRACO (horaires exacts dans l'app).",
+    "detail": "Belle Ville via Tiéfo Amoro - Escale Tiéfo - UCAO. Feuilles de marche officielles 331/332 (horaires exacts).",
     "arrets": [
       {
         "nom": "INSSA (Belle Ville)",
