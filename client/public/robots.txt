@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://konabmap-sotraco.onrender.com/sitemap.xml
