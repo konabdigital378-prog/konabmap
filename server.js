@@ -78,7 +78,14 @@ async function activerPremium(userId, jours) {
   const cur = prof?.[0]?.premium_until ? new Date(prof[0].premium_until) : null;
   if (cur && cur > base) base = cur;
   const fin = new Date(base.getTime() + jours * 86400000).toISOString();
-  await supaAdmin.from('profils').update({ is_premium: true, premium_until: fin, updated_at: new Date().toISOString() }).eq('user_id', userId);
+  const { data: upd } = await supaAdmin.from('profils').update({ is_premium: true, premium_until: fin, updated_at: new Date().toISOString() }).eq('user_id', userId).select('user_id');
+  if (!upd || upd.length === 0) {
+    // Pas encore de profil : on le crée (sinon l'activation est perdue)
+    let email = null;
+    try { email = (await supaAdmin.auth.admin.getUserById(userId)).data?.user?.email || null; } catch { /* ignore */ }
+    const pseudo = (email ? email.split('@')[0] : 'etudiant').slice(0, 30);
+    await supaAdmin.from('profils').upsert({ user_id: userId, email, pseudo, is_premium: true, premium_until: fin, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+  }
   return fin;
 }
 
