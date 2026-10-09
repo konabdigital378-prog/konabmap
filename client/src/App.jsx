@@ -146,9 +146,13 @@ export default function App() {
     })();
   }, [session]);
 
-  // GPS utilisateur
+  // GPS utilisateur (repli = centre de sa ville si refusé)
   useEffect(() => {
-    if (!navigator.geolocation) return;
+    const repliVille = () => {
+      const v = VILLES[localStorage.getItem('ville') || 'Ouagadougou'] || VILLES['Ouagadougou'];
+      return { lat: v.centre[0], lng: v.centre[1] };
+    };
+    if (!navigator.geolocation) { setUserPos(repliVille()); return; }
     const id = navigator.geolocation.watchPosition(
       (p) => {
         setUserPos({ lat: p.coords.latitude, lng: p.coords.longitude });
@@ -166,7 +170,7 @@ export default function App() {
           }
         }
       },
-      () => setUserPos((u) => u || { lat: 12.368, lng: -1.519 }),
+      () => setUserPos((u) => u || repliVille()),
       { enableHighAccuracy: true }
     );
     return () => navigator.geolocation.clearWatch(id);

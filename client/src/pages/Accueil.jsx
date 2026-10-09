@@ -391,7 +391,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
               <small>
                 {directs.length > 0 && <span>🟢 {directs.map((b) => b.pseudo.split(' ')[0]).join(', ')} en direct • </span>}
                 {termes.length > 0
-                  ? termes.map(([t, hs]) => `📋 ${t.split('(')[0].trim()} ${hs[0]}`).join(' • ')
+                  ? termes.map(([t, hs]) => <span key={t} style={{ cursor: 'pointer', textDecoration: 'underline' }} onClick={() => setFiltre(c)} title="Filtrer la liste">📋 {t.split('(')[0].trim()} {hs[0]}</span>).reduce((acc, el, i) => (i === 0 ? [el] : [...acc, ' • ', el]), [])
                   : freq.length > 0 ? `🕒 ${freq.slice(0, 2).join(' • ')}` : '🌙 Terminé'}
               </small>
             </div>
