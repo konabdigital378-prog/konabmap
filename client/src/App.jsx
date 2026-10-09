@@ -3,7 +3,7 @@ import Splash from './components/Splash.jsx';
 import BottomNav from './components/BottomNav.jsx';
 import Accueil from './pages/Accueil.jsx';
 import { VILLES } from './data.js';
-import { distanceM } from './lib.js';
+import { distanceM, setBadge } from './lib.js';
 const Lignes = lazy(() => import('./pages/Lignes.jsx'));
 const Trajet = lazy(() => import('./pages/Trajet.jsx'));
 const Compte = lazy(() => import('./pages/Compte.jsx'));
@@ -187,7 +187,8 @@ export default function App() {
         const maVille = !n.ville || n.ville === (localStorage.getItem('ville') || 'Ouagadougou');
         if (pourMoi && maVille) {
           setBanner(`📢 ${n.titre || 'Info'} : ${n.message || ''}`);
-          setTimeout(() => setBanner(''), 25000);
+          setBadge(1);
+          setTimeout(() => { setBanner(''); setBadge(0); }, 25000);
         }
       })
       .subscribe();
@@ -269,7 +270,7 @@ export default function App() {
         {pageAffichee === 'accueil' && <Accueil key={'a'+profil.ville} ville={profil.ville} userPos={userPos} bus={busVille} isPremium={isPremium} goPremium={goPremium} suiviId={suiviId} clearSuivi={() => setSuiviId('')} go={(p) => { setPage(p); window.scrollTo({ top: 0 }); }} focusLigne={focusLigne} clearFocus={() => setFocusLigne('')} />}
         {pageAffichee === 'lignes' && <Lignes key={'l'+profil.ville} ville={profil.ville} onVoir={voirLigne} isPremium={isPremium} goPremium={goPremium} bus={busVille} />}
         {pageAffichee === 'trajet' && <Trajet key={'t'+profil.ville} ville={profil.ville} onVoir={voirLigne} />}
-        {pageAffichee === 'compte' && <Compte session={session} onSession={refreshSession} isPremium={isPremium} goPremium={goPremium} connecte={enLigne} />}
+        {pageAffichee === 'compte' && <Compte session={session} onSession={refreshSession} isPremium={isPremium} goPremium={goPremium} go={(p) => { setPage(p); window.scrollTo({ top: 0 }); }} connecte={enLigne} />}
         {pageAffichee === 'premium' && <Premium onPremium={() => refreshSession()} onCompte={() => { setPage('compte'); window.scrollTo({ top: 0 }); }} session={session} />}
         {pageAffichee === 'aide' && <Aide />}
         </Suspense>

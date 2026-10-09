@@ -18,7 +18,7 @@ function erreurAmicale(e, setMsg, setCooldown) {
   else setMsg('Erreur : ' + m, true);
 }
 
-export default function Compte({ session, onSession, isPremium, goPremium, connecte }) {
+export default function Compte({ session, onSession, isPremium, goPremium, go, connecte }) {
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
   const [msg, setMsg] = useState(['', false]);
@@ -95,6 +95,9 @@ export default function Compte({ session, onSession, isPremium, goPremium, conne
       await saveProfil({ pseudo: p, ville, universite: univ });
     } catch (e) { console.warn('profil non sauvé:', e?.message); }
     onSession(p, ville, false);
+    if (!isPremium && go && confirm('Profil enregistré ✅ Un abonnement (100 FCFA/30j) est requis pour utiliser les bus. Aller à la page Premium ?')) {
+      go('premium');
+    }
   };
 
   return (

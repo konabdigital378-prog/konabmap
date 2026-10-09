@@ -167,6 +167,21 @@ export function dureeTrajet(ligne, dep, arr) {
   return `≈${min} min`;
 }
 
+// Heure d'arrivée estimée (maintenant + minutes) : "14h35"
+export function heureArrivee(dureeTxt) {
+  const min = Number(String(dureeTxt || '').replace(/[^0-9]/g, '')) || 0;
+  const d = new Date(Date.now() + min * 60000);
+  return `${d.getHours()}h${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+// Badge sur l'icône de l'app (PWA)
+export function setBadge(n) {
+  try {
+    if ('setAppBadge' in navigator) navigator.setAppBadge(n);
+    else if ('clearAppBadge' in navigator && !n) navigator.clearAppBadge();
+  } catch { /* ignore */ }
+}
+
 // Prochains départs EXACTS (feuilles de marche) pour une ligne, groupés par terminus
 export function prochainsExacts(departs, ligne, n = 3) {
   const t = typeJour();

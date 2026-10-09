@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { LIGNES } from '../data.js';
-import { dureeTrajet } from '../lib.js';
+import { dureeTrajet, heureArrivee } from '../lib.js';
 
 export default function Trajet({ ville, onVoir }) {
   const lignesVille = Object.entries(LIGNES).filter(([, l]) => (l.ville || 'Ouagadougou') === ville);
@@ -83,7 +83,7 @@ export default function Trajet({ ville, onVoir }) {
         <div id="resultat-itineraire">          {res && res.directes && res.directes.map(([c, l]) => {
             const duree = dureeTrajet(l, dep, arr);
             return (
-              <p key={c}>✅ Prends <b>{c}</b> : {l.nom}<br /><small>{dep} → {arr} direct, sans correspondance{duree ? ` • ${duree} de trajet` : ''}</small><br />
+              <p key={c}>✅ Prends <b>{c}</b> : {l.nom}<br /><small>{dep} → {arr} direct, sans correspondance{duree ? ` • ${duree} de trajet, arrivée vers ${heureArrivee(duree)}` : ''}</small><br />
                 <button className="btn secondary" onClick={() => onVoir(c)}>📍 Voir</button>{' '}
                 <button className="btn secondary" onClick={() => partagerTrajet(c)}>💌 Partager</button>
               </p>

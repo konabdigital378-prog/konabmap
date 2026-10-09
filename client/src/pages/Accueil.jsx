@@ -75,6 +75,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
   useEffect(() => {
     mapObj.current = L.map(mapRef.current, { zoomControl: false }).setView([12.3714, -1.5197], 12);
     L.control.zoom({ position: 'bottomright' }).addTo(mapObj.current);
+    L.control.scale({ position: 'bottomleft', imperial: false }).addTo(mapObj.current);
     tileRef.current = L.tileLayer(FONDS[localStorage.getItem('fond') || 'clair'], {
       maxZoom: 19, attribution: ATTR,
     }).addTo(mapObj.current);
