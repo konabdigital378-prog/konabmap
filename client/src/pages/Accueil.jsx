@@ -53,6 +53,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
   const [fond, setFond] = useState(() => localStorage.getItem('fond') || (document.documentElement.dataset.theme === 'dark' ? 'sombre' : 'clair'));
   const [grandeCarte, setGrandeCarte] = useState(false);
   const [suiviGPS, setSuiviGPS] = useState(true);
+  const [secondesPartage, setSecondesPartage] = useState(0);
 
   const FONDS = {
     clair: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -123,6 +124,17 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
         .bindPopup(`🎓 <b>${u.nom}</b>`)
         .addTo(lignesLayer.current);
     });
+    // Zone d'alerte 800 m autour de mon arrêt
+    const monNom = localStorage.getItem('mon-arret') || '';
+    const tousArrets = [];
+    lignesDeVille(ville).forEach(([, x]) => x.arrets.forEach((a) => tousArrets.push(a)));
+    const monA = tousArrets.find((a) => a.nom === monNom);
+    if (monA) {
+      L.circle([monA.lat, monA.lng], { radius: 800, color: '#009639', weight: 2, opacity: 0.6, fillOpacity: 0.08 }).addTo(lignesLayer.current);
+      L.marker([monA.lat, monA.lng], { icon: L.divIcon({ className: '', html: '<div class="univ-pin">🚏</div>', iconSize: [34, 34], iconAnchor: [17, 17] }) })
+        .bindPopup(`🚏 <b>Mon arrêt : ${monA.nom}</b><br>Alerte à moins de 800 m`)
+        .addTo(lignesLayer.current);
+    }
     setTimeout(() => map.invalidateSize(), 150);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ville]);
@@ -196,7 +208,16 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
     });
   }, [bus]);
 
+  // Compteur de durée de partage
+  useEffect(() => {
+    if (!partage) return;
+    const iv = setInterval(() => setSecondesPartage((s) => s + 5), 5000);
+    return () => clearInterval(iv);
+  }, [partage]);
+
   const pseudo = () => localStorage.getItem('pseudo') || 'Étudiant';
+
+  const monBus = bus.find((b) => b.pseudo === pseudo() && b.ligne === ligne);
 
   const demarrer = () => {
     if (!navigator.geolocation) return alert('GPS non supporté');
@@ -210,6 +231,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
     navigator.geolocation.getCurrentPosition(
       () => {
         setPartage(true);
+        setSecondesPartage(0);
         debutPartage.current = Date.now();
         const envoyer = (pos) => {
           dernierePos.current = pos;
@@ -447,7 +469,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
           )}
         </div>
         <p className="hint" style={partage ? { color: 'green' } : {}}>
-          {partage ? `🟢 Tu partages comme BUS ${ligne}. Les autres te voient !` : "Tu n'es pas en partage. Les autres ne te voient pas."}
+          {partage ? `🟢 Tu partages comme BUS ${ligne} depuis ${Math.floor(secondesPartage / 60)} min${monBus?.merci ? ` • 🙏 ${monBus.merci} mercis reçus` : ''}. Les autres te voient !` : "Tu n'es pas en partage. Les autres ne te voient pas."}
         </p>
       </section>
 
