@@ -451,6 +451,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
         </div>
         <div id="map" ref={mapRef} style={grandeCarte ? { height: '78vh' } : {}}></div>
         <button className="locate-btn" onClick={meLocaliser} title="Me localiser">📍</button>
+        <button className="locate-btn" style={{ top: 56 }} onClick={() => { const v = VILLES[ville]; if (v && mapObj.current) mapObj.current.setView(v.centre, v.zoom); }} title="Recentrer sur ma ville">🏙️</button>
       </div>
 
       <section className="card highlight">
@@ -566,6 +567,7 @@ function Rappels({ ville, lignesVille, departs }) {
   const [terminus, setTerminus] = useState('');
   const [heure, setHeure] = useState('07:00');
   const [avance, setAvance] = useState(10);
+  const [jours, setJours] = useState('tous');
 
   const charger = async () => {
     try { setListe(await mesRappels()); } catch { /* non connecté */ }
@@ -580,8 +582,10 @@ function Rappels({ ville, lignesVille, departs }) {
       const now = new Date();
       const cur = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
       const jour = now.toISOString().slice(0, 10);
+      const typeJ = now.getDay() === 0 ? 'dim' : 'sem';
       (listeRef.current || []).forEach((r) => {
         if (!r.actif) return;
+        if (r.jours && r.jours !== 'tous' && r.jours !== typeJ) return;
         const [a, b] = String(r.heure).split(':').map(Number);
         const dep = a * 60 + b - (r.avance_min || 10);
         const al = `${String(Math.floor(((dep + 1440) % 1440) / 60)).padStart(2, '0')}:${String((((dep % 60) + 60) % 60)).padStart(2, '0')}`;
@@ -610,10 +614,10 @@ function Rappels({ ville, lignesVille, departs }) {
     const term = terminus || terminusPossibles[0] || '';
     if (!ligneChoisie || !term || !heure) return alert('Ligne + terminus + heure requis');
     try {
-      await ajouterRappel({ ville, ligne: ligneChoisie, terminus: term, heure, avance_min: Number(avance) });
+      await ajouterRappel({ ville, ligne: ligneChoisie, terminus: term, heure, avance_min: Number(avance), jours });
       setTerminus('');
       charger();
-      alert(`Rappel activé : ${ligneChoisie} ${heure} depuis ${term} (${avance} min avant) ⏰`);
+      alert(`Rappel activé : ${ligneChoisie} ${heure} depuis ${term} (${avance} min avant, ${jours === 'tous' ? 'tous les jours' : jours === 'sem' ? 'lun–sam' : 'dimanche'}) ⏰`);
     } catch (e) { alert(e.message || 'Connecte-toi pour créer des rappels'); }
   };
 
@@ -639,10 +643,16 @@ function Rappels({ ville, lignesVille, departs }) {
         <option value={15}>15 min avant</option>
         <option value={30}>30 min avant</option>
       </select>
+      <label>Jours</label>
+      <select value={jours} onChange={(e) => setJours(e.target.value)}>
+        <option value="tous">Tous les jours</option>
+        <option value="sem">Lundi – Samedi</option>
+        <option value="dim">Dimanche & fériés</option>
+      </select>
       <button className="btn primary" onClick={ajouter}>+ Ajouter ce rappel</button>
       {liste.filter((r) => (LIGNES[r.ligne]?.ville || 'Ouagadougou') === ville || r.ville === ville).map((r) => (
         <div key={r.id} className="hist-item">
-          <span><b>{r.ligne}</b> {r.heure.slice(0, 5)} <small>↓ {r.terminus} (−{r.avance_min} min)</small></span>
+          <span><b>{r.ligne}</b> {r.heure.slice(0, 5)} <small>↓ {r.terminus} (−{r.avance_min} min{r.jours && r.jours !== 'tous' ? (r.jours === 'sem' ? ', lun–sam' : ', dim') : ''})</small></span>
           <span>
             <button className="btn secondary" style={{ width: 'auto', marginTop: 0, padding: '4px 10px' }} onClick={async () => { await basculeRappel(r.id, !r.actif); charger(); }}>{r.actif ? '⏸️' : '▶️'}</button>{' '}
             <button className="btn secondary" style={{ width: 'auto', marginTop: 0, padding: '4px 10px' }} onClick={async () => { if (confirm('Supprimer ce rappel ?')) { await supprimerRappel(r.id); charger(); } }}>✕</button>

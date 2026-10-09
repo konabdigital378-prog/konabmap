@@ -103,10 +103,10 @@ export async function mesRappels() {
   return data || [];
 }
 
-export async function ajouterRappel({ ville, ligne, terminus, heure, avance_min }) {
+export async function ajouterRappel({ ville, ligne, terminus, heure, avance_min, jours }) {
   const { data: { user } } = await supa.auth.getUser();
   if (!user) throw new Error('Connecte-toi');
-  const { error } = await supa.from('rappels').insert({ user_id: user.id, ville, ligne, terminus, heure, avance_min });
+  const { error } = await supa.from('rappels').insert({ user_id: user.id, ville, ligne, terminus, heure, avance_min, jours: jours || 'tous' });
   if (error) throw error;
 }
 

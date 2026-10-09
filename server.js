@@ -121,8 +121,10 @@ setInterval(async () => {
     const now = new Date();
     const cur = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     const jour = now.toISOString().slice(0, 10);
+    const typeJour = now.getDay() === 0 ? 'dim' : 'sem';
     const { data: rappels } = await supaAdmin.from('rappels').select('*').eq('actif', true).limit(2000);
     for (const r of rappels || []) {
+      if (r.jours && r.jours !== 'tous' && r.jours !== typeJour) continue;
       const [a, b] = String(r.heure).split(':').map(Number);
       const depart = a * 60 + b - (r.avance_min || 10);
       const alerte = `${String(Math.floor(((depart + 1440) % 1440) / 60)).padStart(2, '0')}:${String(((depart % 60) + 60) % 60).padStart(2, '0')}`;
