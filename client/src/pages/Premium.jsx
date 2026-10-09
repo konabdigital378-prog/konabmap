@@ -24,7 +24,7 @@ export function usePremium() {
   return { premium, refreshPremium: refresh };
 }
 
-export default function Premium({ onPremium, onCompte, session }) {
+export default function Premium({ onPremium, onCompte, goAccueil, session }) {
   const { premium, refreshPremium } = usePremium();
   const [merchant, setMerchant] = useState('...');
   const [prix, setPrix] = useState(100);
@@ -139,9 +139,11 @@ export default function Premium({ onPremium, onCompte, session }) {
       <section className="card" style={{ textAlign: 'center', background: 'linear-gradient(160deg,#062a5e,#009639)', color: '#fff' }}>
         <h2 style={{ color: '#fff' }}>Pass Premium</h2>
         {premium ? (
-          <p>✅ Actif jusqu'au <b>{premium.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}</b> ({Math.max(0, Math.ceil((premium - Date.now()) / 86400000))} jours restants)</p>
-        ) : premium === false ? (
-          <p>Partage ta position, alertes favoris, favoris illimités, badge ⭐</p>
+          <>
+            <p>✅ Actif jusqu'au <b>{premium.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}</b> ({Math.max(0, Math.ceil((premium - Date.now()) / 86400000))} jours restants)</p>
+            <button className="btn primary" style={{ background: '#FEDD00', color: '#3a2b00' }} onClick={goAccueil}>🚌 Voir mes bus</button>
+          </>
+        ) : premium === false ? (          <p>Partage ta position, alertes favoris, favoris illimités, badge ⭐</p>
         ) : (
           <p className="hint">Connecte-toi pour voir ton statut.</p>
         )}

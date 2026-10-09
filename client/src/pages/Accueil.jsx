@@ -569,6 +569,20 @@ function Rappels({ ville, lignesVille, departs }) {
   const [avance, setAvance] = useState(10);
   const [jours, setJours] = useState('tous');
 
+  // Brouillon venu des pages Lignes/Trajet ("me rappeler ce départ")
+  useEffect(() => {
+    try {
+      const d = JSON.parse(localStorage.getItem('rappelDraft') || 'null');
+      if (d?.ligne) {
+        if (LIGNES[d.ligne]) setLigne(d.ligne);
+        if (d.terminus) setTerminus(d.terminus);
+        if (d.heure) setHeure(d.heure.slice(0, 5));
+        localStorage.removeItem('rappelDraft');
+      }
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const charger = async () => {
     try { setListe(await mesRappels()); } catch { /* non connecté */ }
   };

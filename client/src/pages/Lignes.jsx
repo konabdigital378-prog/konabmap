@@ -3,7 +3,7 @@ import { LIGNES } from '../data.js';
 import { getFavs, prochainsDeparts, prochainsExacts, statutHoraire, typeJour, telechargerICS, toutesHeures } from '../lib.js';
 import { fetchHoraires, fetchDeparts, demanderVille, topDemandes, moyennesAvis, noterLigne } from '../supabase.js';
 
-export default function Lignes({ ville, onVoir, isPremium, goPremium, bus }) {
+export default function Lignes({ ville, onVoir, isPremium, goPremium, bus, go }) {
   const [q, setQ] = useState('');
   const [favs, setFavs] = useState(getFavs());
   const [horaires, setHoraires] = useState({});
@@ -93,7 +93,12 @@ export default function Lignes({ ville, onVoir, isPremium, goPremium, bus }) {
                   <div>
                     <p><small>📋 <b>Feuille de marche officielle</b> ({typeJour() === 'dim' ? 'dimanche & fériés' : 'lundi à samedi'})</small></p>
                     {Object.entries(exacts).map(([term, heures]) => (
-                      <p key={term}><small>🚌 <b>{term}</b> : <b>{heures.join(' • ')}</b></small></p>
+                      <p key={term}><small>🚌 <b>{term}</b> : {heures.map((hh) => (
+                        <span key={hh} style={{ cursor: 'pointer', textDecoration: 'underline' }} title="Créer un rappel pour ce départ" onClick={() => {
+                          localStorage.setItem('rappelDraft', JSON.stringify({ ligne: c, terminus: term, heure: hh }));
+                          go('accueil');
+                        }}><b>{hh}</b></span>
+                      )).reduce((acc, el, i) => (i === 0 ? [el] : [...acc, ' • ', el]), [])}</small></p>
                     ))}
                   </div>
                 ) : h ? (

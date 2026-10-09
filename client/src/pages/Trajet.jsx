@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { LIGNES } from '../data.js';
 import { dureeTrajet, heureArrivee } from '../lib.js';
 
-export default function Trajet({ ville, onVoir }) {
+export default function Trajet({ ville, onVoir, go }) {
   const lignesVille = Object.entries(LIGNES).filter(([, l]) => (l.ville || 'Ouagadougou') === ville);
   const arrets = [...new Set(lignesVille.flatMap(([, l]) => l.arrets.map((a) => a.nom)))];
   const univ = arrets.find((n) => n.includes('Universit')) || arrets[0];
@@ -85,7 +85,11 @@ export default function Trajet({ ville, onVoir }) {
             return (
               <p key={c}>✅ Prends <b>{c}</b> : {l.nom}<br /><small>{dep} → {arr} direct, sans correspondance{duree ? ` • ${duree} de trajet, arrivée vers ${heureArrivee(duree)}` : ''}</small><br />
                 <button className="btn secondary" onClick={() => onVoir(c)}>📍 Voir</button>{' '}
-                <button className="btn secondary" onClick={() => partagerTrajet(c, duree)}>💌 Partager</button>
+                <button className="btn secondary" onClick={() => partagerTrajet(c, duree)}>💌 Partager</button>{' '}
+                <button className="btn secondary" onClick={() => {
+                  localStorage.setItem('rappelDraft', JSON.stringify({ ligne: c, terminus: dep }));
+                  go('accueil');
+                }}>⏰ Rappel</button>
               </p>
             );
           })}

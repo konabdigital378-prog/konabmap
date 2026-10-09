@@ -208,6 +208,8 @@ export default function App() {
     }
   }, []);
 
+  const goPage = (p) => { setPage(p); window.scrollTo({ top: 0 }); };
+
   const voirLigne = (code) => {
     setFocusLigne(code);
     setPage('accueil');
@@ -268,10 +270,10 @@ export default function App() {
       <main>
         <Suspense fallback={<section className="card"><p className="hint">Chargement…</p></section>}>
         {pageAffichee === 'accueil' && <Accueil key={'a'+profil.ville} ville={profil.ville} userPos={userPos} bus={busVille} isPremium={isPremium} goPremium={goPremium} suiviId={suiviId} clearSuivi={() => setSuiviId('')} go={(p) => { setPage(p); window.scrollTo({ top: 0 }); }} focusLigne={focusLigne} clearFocus={() => setFocusLigne('')} />}
-        {pageAffichee === 'lignes' && <Lignes key={'l'+profil.ville} ville={profil.ville} onVoir={voirLigne} isPremium={isPremium} goPremium={goPremium} bus={busVille} />}
-        {pageAffichee === 'trajet' && <Trajet key={'t'+profil.ville} ville={profil.ville} onVoir={voirLigne} />}
-        {pageAffichee === 'compte' && <Compte session={session} onSession={refreshSession} isPremium={isPremium} goPremium={goPremium} go={(p) => { setPage(p); window.scrollTo({ top: 0 }); }} connecte={enLigne} />}
-        {pageAffichee === 'premium' && <Premium onPremium={() => refreshSession()} onCompte={() => { setPage('compte'); window.scrollTo({ top: 0 }); }} session={session} />}
+        {pageAffichee === 'lignes' && <Lignes key={'l'+profil.ville} ville={profil.ville} onVoir={voirLigne} isPremium={isPremium} goPremium={goPremium} bus={busVille} go={goPage} />}
+        {pageAffichee === 'trajet' && <Trajet key={'t'+profil.ville} ville={profil.ville} onVoir={voirLigne} go={goPage} />}
+        {pageAffichee === 'compte' && <Compte session={session} onSession={refreshSession} isPremium={isPremium} goPremium={goPremium} go={goPage} connecte={enLigne} />}
+        {pageAffichee === 'premium' && <Premium onPremium={() => refreshSession()} onCompte={() => { setPage('compte'); window.scrollTo({ top: 0 }); }} goAccueil={() => goPage('accueil')} session={session} />}
         {pageAffichee === 'aide' && <Aide />}
         </Suspense>
         {pageAffichee === 'admin' && (admin ? <Admin ville={profil.ville} /> : (
