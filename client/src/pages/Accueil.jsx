@@ -299,6 +299,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
 
   let visibles = favsOnly ? bus.filter((b) => getFavs().includes(b.ligne)) : [...bus];
   if (filtre !== 'toutes') visibles = visibles.filter((b) => b.ligne === filtre);
+  const favsSansDirect = getFavs().filter((c) => LIGNES[c] && (LIGNES[c].ville || 'Ouagadougou') === ville && !bus.some((b) => b.ligne === c));
   if (userPos && tri === 'distance') {
     visibles = [...visibles].sort((a, b2) => distanceM(userPos.lat, userPos.lng, a.lat, a.lng) - distanceM(userPos.lat, userPos.lng, b2.lat, b2.lng));
   } else if (tri === 'recent') {
@@ -475,6 +476,9 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
 
       <section className="card">
         <h2>🚏 Bus autour de moi</h2>
+        {favsSansDirect.length > 0 && (
+          <p className="hint">⭐ Aucun bus en direct sur : <b>{favsSansDirect.join(', ')}</b> — vois les horaires théoriques plus haut ou partage ta position si tu es dedans !</p>
+        )}
         <input value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder="🔍 Filtrer (ligne ou pseudo)..." style={{ marginBottom: 8 }} />
         <div className="chips">
           <button className={'chip' + (filtre === 'toutes' ? ' on' : '')} onClick={() => setFiltre('toutes')}>Tous</button>
