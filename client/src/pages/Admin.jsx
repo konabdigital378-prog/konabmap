@@ -59,6 +59,7 @@ export default function Admin({ ville }) {
   const [demandes, setDemandes] = useState([]);
   const [revenus, setRevenus] = useState(null);
   const [passActifs, setPassActifs] = useState(null);
+  const [revenusMois, setRevenusMois] = useState([]);
   const [depLigne, setDepLigne] = useState('');
   const [depTerminus, setDepTerminus] = useState('');
   const [depJours, setDepJours] = useState('sem');
@@ -89,6 +90,13 @@ export default function Admin({ ville }) {
         if (String(o.created_at).slice(0, 7) === mois) moisTotal += o.amount_fcfa || 0;
       });
       setRevenus({ total, mois: moisTotal, nb: (payees || []).length });
+      // Revenus par mois (6 derniers)
+      const parMois = {};
+      (payees || []).forEach((o) => {
+        const m = String(o.created_at).slice(0, 7);
+        parMois[m] = (parMois[m] || 0) + (o.amount_fcfa || 0);
+      });
+      setRevenusMois(Object.entries(parMois).sort().slice(-6));
       const { count: actifs } = await supa.from('profils').select('pseudo', { count: 'exact', head: true }).gt('premium_until', new Date().toISOString());
       setPassActifs(actifs ?? 0);
       const { data: deps } = await supa.from('departs').select('*').eq('ville', ville).order('ligne').order('heure').limit(1000);
@@ -280,6 +288,17 @@ export default function Admin({ ville }) {
                   ))}
                   <p>🚌 <b>{stats.bus.length}</b> positions bus en base<br /><small>{stats.bus.slice(0, 8).map((b) => `${b.ligne} (${b.ville}) par ${b.pseudo}`).join(' • ') || 'aucune'}</small></p>
                   <p>💰 <b>{revenus ? revenus.total.toLocaleString('fr-FR') + ' F' : '…'}</b> encaissés ({revenus ? revenus.nb : '…'} paiements) • ce mois : <b>{revenus ? revenus.mois.toLocaleString('fr-FR') + ' F' : '…'}</b><br /><small>💎 {passActifs ?? '…'} pass actifs</small></p>
+                  {revenusMois.length > 0 && revenusMois.map(([m, v]) => {
+                    const max = Math.max(1, ...revenusMois.map(([, x]) => x));
+                    return (
+                      <div key={m} style={{ margin: '4px 0' }}>
+                        <small>{m} — <b>{v.toLocaleString('fr-FR')} F</b></small>
+                        <div style={{ height: 8, background: '#eee', borderRadius: 8 }}>
+                          <div style={{ height: '100%', width: `${Math.round((v / max) * 100)}%`, background: '#660099', borderRadius: 8 }} />
+                        </div>
+                      </div>
+                    );
+                  })}
                 </>
               )}
             </div>

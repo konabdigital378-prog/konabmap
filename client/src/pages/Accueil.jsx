@@ -397,7 +397,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
       )}
       <div className="hero">
         <div>
-          <div className="hero-ville">📍 {ville}{estHeurePointe() ? ' • 🔥 Heure de pointe' : ''}</div>
+          <div className="hero-ville" style={{ cursor: 'pointer' }} onClick={() => go('compte')} title="Changer de ville">📍 {ville}{estHeurePointe() ? ' • 🔥 Heure de pointe' : ''} ✏️</div>
           <div className="hero-titre">{univ ? univ.replace(/^Université\s*/, '') : 'Choisis ton université'}</div>
           <div className="hero-stats">
             <div className="hero-stat">🚌 {bus.length}<small>bus en direct</small></div>

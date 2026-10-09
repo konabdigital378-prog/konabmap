@@ -11,6 +11,7 @@ export default function Lignes({ ville, onVoir, isPremium, goPremium, bus }) {
   const [demandes, setDemandes] = useState([]);
   const [nouvelleVille, setNouvelleVille] = useState('');
   const [avis, setAvis] = useState({});
+  const [masquerSuspendues, setMasquerSuspendues] = useState(false);
   const enDirect = {};
   (bus || []).forEach((b) => { enDirect[b.ligne] = (enDirect[b.ligne] || 0) + 1; });
   const [, tick] = useState(0);
@@ -55,6 +56,7 @@ export default function Lignes({ ville, onVoir, isPremium, goPremium, bus }) {
   const query = q.toLowerCase();
   const lignes = Object.entries(LIGNES)
     .filter(([, l]) => (l.ville || 'Ouagadougou') === ville)
+    .filter(([c]) => !masquerSuspendues || horaires[c]?.actif !== false)
     .filter(([c, l]) => !query || (c + ' ' + l.nom + ' ' + (l.detail || '') + ' ' + l.arrets.map((a) => a.nom).join(' ')).toLowerCase().includes(query))
     .sort((a, b) => {
       const fa = favs.includes(a[0]) ? 0 : 1, fb = favs.includes(b[0]) ? 0 : 1;
@@ -69,6 +71,7 @@ export default function Lignes({ ville, onVoir, isPremium, goPremium, bus }) {
       <section className="card">
         <h2>🕒 Lignes & arrêts SOTRACO</h2>
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="🔍 Rechercher une ligne ou un arrêt..." style={{ marginBottom: 8 }} />
+        <label><input type="checkbox" checked={masquerSuspendues} onChange={(e) => setMasquerSuspendues(e.target.checked)} /> Masquer les lignes suspendues</label>
         <div id="lignes-info">
           {lignes.map(([c, l]) => {
             const h = horaires[c];

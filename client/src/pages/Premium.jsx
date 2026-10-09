@@ -139,7 +139,7 @@ export default function Premium({ onPremium, onCompte, session }) {
       <section className="card" style={{ textAlign: 'center', background: 'linear-gradient(160deg,#062a5e,#009639)', color: '#fff' }}>
         <h2 style={{ color: '#fff' }}>Pass Premium</h2>
         {premium ? (
-          <p>✅ Actif jusqu'au <b>{premium.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}</b></p>
+          <p>✅ Actif jusqu'au <b>{premium.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}</b> ({Math.max(0, Math.ceil((premium - Date.now()) / 86400000))} jours restants)</p>
         ) : premium === false ? (
           <p>Partage ta position, alertes favoris, favoris illimités, badge ⭐</p>
         ) : (
