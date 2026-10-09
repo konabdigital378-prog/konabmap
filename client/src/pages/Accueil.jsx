@@ -28,6 +28,8 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
   const [alertSonore, setAlertSonore] = useState(true);
   const [voix, setVoix] = useState(() => localStorage.getItem('voix') === 'oui');
   const watchId = useRef(null);
+  const heartbeat = useRef(null);
+  const dernierePos = useRef(null);
   const debutPartage = useRef(null);
   const dejaAlerte = useRef({});
   const busConnus = useRef(new Set());
@@ -203,24 +205,33 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
       goPremium();
       return;
     }
+    const maLigne = ligne, maVille = ville;
+    if (!confirm(`Partager comme bus ${maLigne} à ${maVille} ?\n(Les autres doivent choisir la même ville pour te voir)`)) return;
     navigator.geolocation.getCurrentPosition(
       () => {
         setPartage(true);
         debutPartage.current = Date.now();
+        const envoyer = (pos) => {
+          dernierePos.current = pos;
+          const payload = {
+            pseudo: pseudo(), ligne: maLigne, ville: maVille, affluence, destination,
+            chauffeur_self: jeSuisChauffeur, note: note.trim().slice(0, 80),
+            lat: pos.coords.latitude, lng: pos.coords.longitude,
+            vitesse: pos.coords.speed || 0,
+          };
+          socket.emit('partage-position', payload);
+          shareBusPosition(payload).catch(() => {});
+        };
         watchId.current = navigator.geolocation.watchPosition(
-          (pos) => {
-            const payload = {
-              pseudo: pseudo(), ligne, ville, affluence, destination,
-              chauffeur_self: jeSuisChauffeur, note: note.trim().slice(0, 80),
-              lat: pos.coords.latitude, lng: pos.coords.longitude,
-              vitesse: pos.coords.speed || 0,
-            };
-            socket.emit('partage-position', payload);
-            shareBusPosition(payload).catch(() => {});
-          },
-          () => alert('Active la localisation GPS'),
+          envoyer,
+          () => { alert('Active la localisation GPS'); setPartage(false); },
           { enableHighAccuracy: true, maximumAge: 2000 }
         );
+        // Heartbeat : réémet la dernière position toutes les 10 s
+        // (le GPS ne bouge pas à l'arrêt, sinon le bus disparaît au bout de 30 s)
+        heartbeat.current = setInterval(() => {
+          if (dernierePos.current) envoyer(dernierePos.current);
+        }, 10000);
       },
       () => alert('Autorise la localisation pour partager comme bus 🙏')
     );
@@ -228,6 +239,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
 
   const arreter = () => {
     if (watchId.current) navigator.geolocation.clearWatch(watchId.current);
+    if (heartbeat.current) { clearInterval(heartbeat.current); heartbeat.current = null; }
     socket.emit('stop-partage');
     // Historique local du trajet
     try {
@@ -257,6 +269,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
     return () => {
       window.removeEventListener('beforeunload', stop);
       if (watchId.current) { navigator.geolocation.clearWatch(watchId.current); socket.emit('stop-partage'); }
+      if (heartbeat.current) clearInterval(heartbeat.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bus]);
@@ -453,7 +466,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
           </select>
         </div>
         <div id="liste-bus">
-          {visibles.length === 0 && <p className="hint">Aucun bus partagé pour l'instant. Monte dans un bus et partage !</p>}
+          {visibles.length === 0 && <p className="hint">Aucun bus partagé à {ville} pour l'instant. Monte dans un bus et partage ! (Tes amis doivent choisir la même ville.)</p>}
           {visibles.length === 0 && (() => {
             try {
               const c = JSON.parse(localStorage.getItem('lastBus') || 'null');
