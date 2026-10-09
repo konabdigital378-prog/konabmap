@@ -3,7 +3,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { LIGNES, VILLES } from '../data.js';
 import { socket } from '../socket.js';
-import { distanceM, formatDist, formatEta, formatEtaVitesse, getFavs, AFFL, prochainsDeparts, prochainsExacts, esc, parler, estHeurePointe } from '../lib.js';
+import { distanceM, formatDist, formatEta, formatEtaVitesse, getFavs, AFFL, prochainsDeparts, prochainsExacts, esc, parler, vibrer, estHeurePointe } from '../lib.js';
 import { shareBusPosition, notify, fetchHoraires, fetchDeparts, mesRappels, ajouterRappel, basculeRappel, supprimerRappel } from '../supabase.js';
 
 export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocus, isPremium, goPremium, suiviId, clearSuivi }) {
@@ -260,6 +260,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
         if (frais && favs.includes(b.ligne)) {
           notify(`Ta ligne ${b.ligne} est en direct !`, `${b.pseudo} partage sa position 🚌`).catch(() => {});
           parler(`Ta ligne ${b.ligne} est en direct !`);
+          vibrer();
         }
       }
     });
@@ -307,6 +308,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
         arriveeSignalee.current = true;
         notify(`Ton bus suivi arrive à ${monArret.nom} !`, `Bus ${busSuivi.ligne} à ${formatDist(d)} 🚌`).catch(() => {});
         parler(`Ton bus suivi arrive à ton arrêt !`);
+        vibrer();
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -336,6 +338,7 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
     dejaAlerte.current[b.id] = true;
     notify(`Bus ${b.ligne} proche !`, `À ${distTxt} de toi, prépare-toi !`).catch(() => {});
     parler(`Bus ${b.ligne} proche, prépare-toi !`);
+    vibrer();
     setTimeout(() => delete dejaAlerte.current[b.id], 15000);
   };
 

@@ -9,12 +9,13 @@ const Trajet = lazy(() => import('./pages/Trajet.jsx'));
 const Compte = lazy(() => import('./pages/Compte.jsx'));
 const Admin = lazy(() => import('./pages/Admin.jsx'));
 const Premium = lazy(() => import('./pages/Premium.jsx'));
+const Aide = lazy(() => import('./pages/Aide.jsx'));
 import { socket } from './socket.js';
 import { supa, getSession, isAdmin, notify } from './supabase.js';
 
 export default function App() {
   const [splash, setSplash] = useState(true);
-  const PAGES = ['accueil', 'lignes', 'trajet', 'compte', 'premium', 'admin'];
+  const PAGES = ['accueil', 'lignes', 'trajet', 'compte', 'premium', 'admin', 'aide'];
   const [page, setPage] = useState(() => {
     const h = location.hash.replace('#/', '');
     return PAGES.includes(h) ? h : 'accueil';
@@ -221,7 +222,7 @@ export default function App() {
 
   // Abonnement obligatoire : sans pass actif (et non admin), seuls Premium/Compte accessibles
   const bloque = pret && !isPremium && !admin;
-  const pageAffichee = bloque && page !== 'compte' ? 'premium' : page;
+  const pageAffichee = bloque && !['compte', 'aide'].includes(page) ? 'premium' : page;
 
   const installer = async () => {
     if (!installEvt) return alert("Ouvre le menu du navigateur → Ajouter à l'écran d'accueil");
@@ -270,6 +271,7 @@ export default function App() {
         {pageAffichee === 'trajet' && <Trajet key={'t'+profil.ville} ville={profil.ville} onVoir={voirLigne} />}
         {pageAffichee === 'compte' && <Compte session={session} onSession={refreshSession} isPremium={isPremium} goPremium={goPremium} connecte={enLigne} />}
         {pageAffichee === 'premium' && <Premium onPremium={() => refreshSession()} onCompte={() => { setPage('compte'); window.scrollTo({ top: 0 }); }} session={session} />}
+        {pageAffichee === 'aide' && <Aide />}
         </Suspense>
         {pageAffichee === 'admin' && (admin ? <Admin ville={profil.ville} /> : (
           <div className="page"><section className="card"><p className="hint">🔒 Réservé aux administrateurs.</p></section></div>

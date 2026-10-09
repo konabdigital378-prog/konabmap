@@ -51,6 +51,11 @@ export function parler(texte) {
   } catch { /* ignore */ }
 }
 
+// Vibration d'alerte (mobile)
+export function vibrer() {
+  try { navigator.vibrate?.([200, 100, 200]); } catch { /* ignore */ }
+}
+
 // Réseau d'abord, cache local en secours (hors-ligne)
 export async function avecCache(cle, fetcher) {
   try {

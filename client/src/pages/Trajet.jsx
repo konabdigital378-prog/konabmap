@@ -10,6 +10,16 @@ export default function Trajet({ ville, onVoir }) {
   const [arr, setArr] = useState(arrets[1] || arrets[0]);
   const [res, setRes] = useState(null);
   const [arretQ, setArretQ] = useState(arrets[0]);
+  const [habituels, setHabituels] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('trajetsHabituels') || '[]'); } catch { return []; }
+  });
+
+  const sauverHabituel = () => {
+    if (dep === arr) return alert('Départ et arrivée identiques');
+    const h = [{ dep, arr }, ...habituels.filter((x) => x.dep !== dep || x.arr !== arr)].slice(0, 6);
+    setHabituels(h);
+    localStorage.setItem('trajetsHabituels', JSON.stringify(h));
+  };
 
   const chercher = () => {
     const directes = lignesVille.filter(([, l]) => l.arrets.some((a) => a.nom === dep) && l.arrets.some((a) => a.nom === arr));
@@ -48,7 +58,17 @@ export default function Trajet({ ville, onVoir }) {
         <div className="row">
           <button className="btn primary" style={{ marginTop: 10 }} onClick={chercher}>Chercher</button>
           <button className="btn secondary" style={{ marginTop: 10 }} onClick={() => { setDep(arr); setArr(dep); setRes(null); }} title="Inverser">🔄</button>
+          <button className="btn secondary" style={{ marginTop: 10 }} onClick={sauverHabituel} title="Enregistrer ce trajet">💾</button>
         </div>
+        {habituels.length > 0 && (
+          <div className="chips" style={{ marginTop: 8 }}>
+            {habituels.map((h, i) => (
+              <button key={i} className="chip" onClick={() => { setDep(h.dep); setArr(h.arr); setRes(null); }}>
+                {h.dep.split('(')[0].trim()} → {h.arr.split('(')[0].trim()}
+              </button>
+            ))}
+          </div>
+        )}
         <div id="resultat-itineraire">          {res && res.directes && res.directes.map(([c, l]) => {
             const duree = dureeTrajet(l, dep, arr);
             return (
