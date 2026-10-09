@@ -21,8 +21,8 @@ export default function Trajet({ ville, onVoir }) {
     localStorage.setItem('trajetsHabituels', JSON.stringify(h));
   };
 
-  const partagerTrajet = async (c) => {
-    const txt = `🚌 Mon trajet KonabMap : ${dep} → ${arr} avec le bus ${c}. Suis les bus en direct : ${location.origin}`;
+  const partagerTrajet = async (c, duree) => {
+    const txt = `🚌 Mon trajet KonabMap : ${dep} → ${arr} avec le bus ${c}${duree ? ` (${duree} de trajet, arrivée vers ${heureArrivee(duree)})` : ''}. Suis les bus en direct : ${location.origin}`;
     try {
       if (navigator.share) await navigator.share({ title: 'Mon trajet KonabMap', text: txt });
       else {
@@ -85,7 +85,7 @@ export default function Trajet({ ville, onVoir }) {
             return (
               <p key={c}>✅ Prends <b>{c}</b> : {l.nom}<br /><small>{dep} → {arr} direct, sans correspondance{duree ? ` • ${duree} de trajet, arrivée vers ${heureArrivee(duree)}` : ''}</small><br />
                 <button className="btn secondary" onClick={() => onVoir(c)}>📍 Voir</button>{' '}
-                <button className="btn secondary" onClick={() => partagerTrajet(c)}>💌 Partager</button>
+                <button className="btn secondary" onClick={() => partagerTrajet(c, duree)}>💌 Partager</button>
               </p>
             );
           })}

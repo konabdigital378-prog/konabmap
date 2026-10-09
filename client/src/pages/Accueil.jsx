@@ -113,7 +113,19 @@ export default function Accueil({ ville, userPos, bus, go, focusLigne, clearFocu
     const v = VILLES[ville] || VILLES['Ouagadougou'];
     map.setView(v.centre, v.zoom);
     for (const [, l] of lignesVille) {
-      L.polyline(l.arrets.map((a) => [a.lat, a.lng]), { color: l.couleur, weight: 4, opacity: 0.85 }).addTo(lignesLayer.current);
+      const latlngs = l.arrets.map((a) => [a.lat, a.lng]);
+      L.polyline(latlngs, { color: l.couleur, weight: 4, opacity: 0.85 }).addTo(lignesLayer.current);
+      // Flèches de sens de circulation
+      [0.33, 0.66].forEach((f) => {
+        if (latlngs.length < 2) return;
+        const idx = Math.min(latlngs.length - 2, Math.floor(latlngs.length * f));
+        const [lat1, lng1] = latlngs[idx], [lat2, lng2] = latlngs[idx + 1];
+        const angle = (Math.atan2(lng2 - lng1, lat2 - lat1) * 180) / Math.PI;
+        L.marker([(lat1 + lat2) / 2, (lng1 + lng2) / 2], {
+          icon: L.divIcon({ className: '', html: `<div style="transform:rotate(${angle}deg);color:${l.couleur};font-size:16px;font-weight:900;text-shadow:0 0 3px #fff">➤</div>`, iconSize: [18, 18], iconAnchor: [9, 9] }),
+          interactive: false,
+        }).addTo(lignesLayer.current);
+      });
       l.arrets.forEach((a) => {
         L.circleMarker([a.lat, a.lng], { radius: 6, color: '#fff', fillColor: l.couleur, fillOpacity: 1, weight: 2 })
           .bindPopup(`<b>${a.nom}</b><br>${l.nom}`)

@@ -57,6 +57,8 @@ export default function Admin({ ville }) {
   const [editH, setEditH] = useState({});
   const [departs, setDeparts] = useState([]);
   const [demandes, setDemandes] = useState([]);
+  const [revenus, setRevenus] = useState(null);
+  const [passActifs, setPassActifs] = useState(null);
   const [depLigne, setDepLigne] = useState('');
   const [depTerminus, setDepTerminus] = useState('');
   const [depJours, setDepJours] = useState('sem');
@@ -75,9 +77,20 @@ export default function Admin({ ville }) {
     try {
       setStats(await adminStats());
       setUsers(await listUsers());
-      const d = await api('/api/admin/orders?statut=' + filtreCommandes).catch(() => ({ orders: [] }));
+      const d = await api('/api/admin/orders').catch(() => ({ orders: [] }));
       setCommandes(d.orders || []);
       setHoraires(await fetchHoraires().catch(() => ({})));
+      // Revenus : commandes payées (validées + auto)
+      const { data: payees } = await supa.from('orders').select('amount_fcfa,created_at').in('status', ['validated', 'auto_validated']);
+      const mois = new Date().toISOString().slice(0, 7);
+      let total = 0, moisTotal = 0;
+      (payees || []).forEach((o) => {
+        total += o.amount_fcfa || 0;
+        if (String(o.created_at).slice(0, 7) === mois) moisTotal += o.amount_fcfa || 0;
+      });
+      setRevenus({ total, mois: moisTotal, nb: (payees || []).length });
+      const { count: actifs } = await supa.from('profils').select('pseudo', { count: 'exact', head: true }).gt('premium_until', new Date().toISOString());
+      setPassActifs(actifs ?? 0);
       const { data: deps } = await supa.from('departs').select('*').eq('ville', ville).order('ligne').order('heure').limit(1000);
       setDeparts(deps || []);
       const { data: dem } = await supa.from('ville_demandes').select('ville').limit(1000);
@@ -266,6 +279,7 @@ export default function Admin({ ville }) {
                     </div>
                   ))}
                   <p>🚌 <b>{stats.bus.length}</b> positions bus en base<br /><small>{stats.bus.slice(0, 8).map((b) => `${b.ligne} (${b.ville}) par ${b.pseudo}`).join(' • ') || 'aucune'}</small></p>
+                  <p>💰 <b>{revenus ? revenus.total.toLocaleString('fr-FR') + ' F' : '…'}</b> encaissés ({revenus ? revenus.nb : '…'} paiements) • ce mois : <b>{revenus ? revenus.mois.toLocaleString('fr-FR') + ' F' : '…'}</b><br /><small>💎 {passActifs ?? '…'} pass actifs</small></p>
                 </>
               )}
             </div>
